@@ -1,9 +1,18 @@
 #!/bin/bash
 
-# Munki In A Box
+# Run-Munki-Run
+# by Graham Pugh
+
+# Run-Munki-Run is a Dockerised Munki setup.
+
+# TO DO:
+# # Download and install Docker from this script
+
+# This RUN-ME-FIRST script is an adaptation of
+# Munki In A Box v.1.4.0
 # By Tom Bridge, Technolutionary LLC
 
-# Version: 1.4.0 - Non-Root Execution
+# Here is Tom's introduction. I have little to add except: thanks Tom!
 
 # This software carries no guarantees, warranties or other assurances that it works. It may wreck your entire environment. That would be bad, mmkay. Backup, test in a VM, and bug report.
 
@@ -17,8 +26,8 @@
 
 # Establish our Basic Variables:
 
-# IP address
-IP=`ipconfig getifaddr en0`
+# IP address - you'll need to change to en0 for wired, en1 if you're running on wifi.
+IP=`ipconfig getifaddr en1`
 # Set the public port on which you wish to access Munki 
 # note this must also be specified in go-munki.sh
 MUNKI_PORT=8008
@@ -45,9 +54,12 @@ SCRIPTDIR="/usr/local/bin"
 #AUTOPKGEMAIL="youraddress@domain.com"
 #AUTOPKGORGNAME="com.technolutionary"
 
-echo "Welcome to Munki-in-a-Box. We're going to get things rolling here with a couple of tests"'!'
-
+echo
+echo "Welcome to Run-Munki-Run, a reworking of Tom Bridge's awesome Munki-In-A-Box."
+echo "We're going to get things rolling here with a couple of tests"'!'
+echo
 echo "First up: Are you an admin user? Enter your password below:"
+echo
 
 #Let's see if this works...
 #This isn't bulletproof, but this is a basic test.
@@ -61,10 +73,6 @@ else
 fi
 
 ${LOGGER} "Starting up..."
-
-# echo "$webstatus"
-
-# ${LOGGER} "Webstatus echoed."
 
 ####
 
@@ -90,7 +98,7 @@ fi
 ${LOGGER} "Mac OS X 10.10 or later is installed."
 
 if [[ $EUID -eq 0 ]]; then
-    $echo "This script is NOT MEANT to run as root. This script is meant to be run as an admin user. I'm going to quit now. Run me without the sudo, please."
+    echo "This script is NOT MEANT to run as root. This script is meant to be run as an admin user. I'm going to quit now. Run me without the sudo, please."
     exit 4 # Running as root.
 fi
 
@@ -153,9 +161,9 @@ else
 
 fi
 
-# Check for 10.9 and 10.8 created here by Tim Sutton, for which I owe him a beer. Or six.
+# Check for Command line tools.
 
-if [[ ! -d /Library/Developer/CommandLineTools/usr/bin ]]; then
+if [[ ! -f "/usr/bin/git" ]]; then
     echo "You need to install the Xcode command line tools. Let me get that for you, it'll just take a minute."
 
 ###
@@ -259,7 +267,7 @@ fi
 # Configure AutoPkg for use with Munki and Sal
 ####
 
-if [ `${DEFAULTS} write com.github.autopkg MUNKI_REPO` != "$REPODIR" ]; then
+if [[ `${DEFAULTS} write com.github.autopkg MUNKI_REPO` != "$REPODIR" ]]; then
 	${DEFAULTS} write com.github.autopkg MUNKI_REPO "$REPODIR"
 fi
 
@@ -280,7 +288,7 @@ plutil -convert xml1 ~/Library/Preferences/com.googlecode.munki.munkiimport.plis
 # Get some Packages and Stuff them in Munki
 ####
 
-${AUTOPKG} run -v ${AUTOPKGRUN}
+${AUTOPKG} run ${AUTOPKGRUN}
 
 ${LOGGER} "AutoPkg Run"
 echo "AutoPkg has run"
@@ -321,6 +329,7 @@ fi
 # Install AutoPkgr from the awesome Linde Group!
 ####
 
+${AUTOPKG} repo-add http://github.com/autopkg/homebysix-recipes.git
 ${AUTOPKG} run AutoPkgr.install
 
 ${LOGGER} "AutoPkgr Installed"
@@ -371,6 +380,10 @@ echo
 echo "#########"
 echo "Now let's start Munki..."
 
-bash go-munki.sh
+# This autoruns the second script, if it's there!
+if [[ -f "run-munki-run.sh" ]]; then
+	bash run-munki-run.sh
+fi
+
 
 exit 0
