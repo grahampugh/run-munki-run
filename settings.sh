@@ -1,11 +1,5 @@
 #!/bin/bash
 
-# logger
-LOGGER="/usr/bin/logger -t Run-Munki-Run"
-
-# IP address - you'll need to change to en0 for wired, en1 if you're running on wifi.
-IP=`ipconfig getifaddr en0`
-
 # Munki Repo location. This should be in /Users somewhere (not tested lately)
 REPOLOC="/Users/Shared"
 REPONAME="repo"
@@ -25,6 +19,8 @@ TEXTEDITOR="TextWrangler.app"
 osvers=$(sw_vers -productVersion | awk -F. '{print $2}') # Thanks Rich Trouton
 
 # Some other directories
+MAINPREFSDIR="/Library/Preferences"
+SCRIPTDIR="/usr/local/bin"
 
 # Autopkg selections
 read -r -d '' AUTOPKGRUN << ENDMSG
@@ -76,3 +72,11 @@ MWA2_DB="${REPOLOC}/mwa2-db"
 MWA2_HOSTNAME="mwa2.grahamrpugh.com"
 # Set the public port on which you wish to access MWA2 
 MWA2_PORT=8002
+
+# logger
+LOGGER="/usr/bin/logger -t Run-Munki-Run"
+
+# IP address - you'll need to change to en0 for wired, en1 if you're running on wifi.
+IP=`ipconfig getifaddr en0`
+
+
