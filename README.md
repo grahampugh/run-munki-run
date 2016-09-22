@@ -34,4 +34,9 @@ To restart the Docker containers, run `./run-munki-run.sh`.
 
 To stop the containers, run `./clean-up.sh`
 
+# Acknowledgements
+
+   * The RUN-ME-FIRST script borrows heavily from 
+     [Tom Bridge's excellent Munki-In-A-Box](https://github.com/tbridge/munki-in-a-box).
+
 
