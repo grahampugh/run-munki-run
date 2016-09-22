@@ -25,40 +25,13 @@
 # Pre-Reqs for this script: 10.10/Server 4 or 10.11/Server 5.  Web Services should be turned on and PHP should be enabled. This script might work with 10.8 or later, but I'm only testing it on 10.10 or later.
 
 # Establish our Basic Variables:
-
-# IP address - you'll need to change to en0 for wired, en1 if you're running on wifi.
-IP=`ipconfig getifaddr en1`
-# Set the public port on which you wish to access Munki 
-# note this must also be specified in go-munki.sh
-MUNKI_PORT=8008
-
-#these must also match go-munki.sh
-REPOLOC="/Users/Shared"
-REPONAME="repo"
-MUNKI_REPO="${REPOLOC}/${REPONAME}"
-
-LOGGER="/usr/bin/logger -t Munki-in-a-Box"
-MUNKILOC="/usr/local/munki"
-WEBROOT="/Library/Server/Web/Data/Sites/Default"
-PHPROOT="/Library/Server/Web/Config/php"
-GIT="/usr/bin/git"
-MANU="/usr/local/munki/manifestutil"
-TEXTEDITOR="TextWrangler.app"
-osvers=$(sw_vers -productVersion | awk -F. '{print $2}') # Thanks Rich Trouton
-AUTOPKGRUN="Firefox.munki GoogleChrome.munki TextWrangler.munki munkitools2.munki Sal.munki Sal-osquery.munki MakeCatalogs.munki"
-DEFAULTS="/usr/bin/defaults"
-AUTOPKG="/usr/local/bin/autopkg"
-MAINPREFSDIR="/Library/Preferences"
-SCRIPTDIR="/usr/local/bin"
-## Below are for Sean Kaiser's Scripts. Uncomment to Use.
-#AUTOPKGEMAIL="youraddress@domain.com"
-#AUTOPKGORGNAME="com.technolutionary"
+. settings.sh
 
 echo
-echo "Welcome to Run-Munki-Run, a reworking of Tom Bridge's awesome Munki-In-A-Box."
-echo "We're going to get things rolling here with a couple of tests"'!'
+echo "### Welcome to Run-Munki-Run, a reworking of Tom Bridge's awesome Munki-In-A-Box."
+echo "### We're going to get things rolling here with a couple of tests"'!'
 echo
-echo "First up: Are you an admin user? Enter your password below:"
+echo "### First up: Are you an admin user? Enter your password below:"
 echo
 
 #Let's see if this works...
@@ -69,7 +42,8 @@ if [[ `cat /tmp/quickytest` == "root" ]]; then
 	${LOGGER} "Privilege Escalation Allowed, Please Continue."
 else
 	${LOGGER} "Privilege Escalation Denied, User Cannot Sudo."
-	exit 6 "You are not an admin user, you need to do this an admin user."
+	echo "### You are not an admin user, you need to do this an admin user."
+	exit 1
 fi
 
 ${LOGGER} "Starting up..."
@@ -82,23 +56,18 @@ ${LOGGER} "Starting up..."
 
 ${LOGGER} "Starting checks..."
 
-# Make sure the whole script stops if Control-C is pressed.
-fn_terminate() {
-    fn_log_error "Munki-in-a-Box has been terminated."
-    exit 1
-}
-trap 'fn_terminate' SIGINT
-
 if [[ $osvers -lt 10 ]]; then
     ${LOGGER} "Could not run because the version of the OS does not meet requirements"
-    echo "Sorry, this is for Mac OS 10.8 or later."
+    echo "### Sorry, this is for Mac OS 10.8 or later."
+    echo
     exit 2 # 10.10+ for the Web Root Location.
 fi
 
 ${LOGGER} "Mac OS X 10.10 or later is installed."
 
 if [[ $EUID -eq 0 ]]; then
-    echo "This script is NOT MEANT to run as root. This script is meant to be run as an admin user. I'm going to quit now. Run me without the sudo, please."
+    echo "### This script is NOT MEANT to run as root. This script is meant to be run as an admin user. I'm going to quit now. Run me without the sudo, please."
+    echo
     exit 4 # Running as root.
 fi
 
@@ -106,7 +75,7 @@ if [[ ! -f $MUNKILOC/munkiimport ]]; then
     ${LOGGER} "Grabbing and Installing the Munki Tools Because They Aren't Present"
     MUNKI_LATEST=$(curl https://api.github.com/repos/munki/munki/releases/latest | python -c 'import json,sys;obj=json.load(sys.stdin);print obj["assets"][0]["browser_download_url"]')
     
-    curl -L "${MUNKI_LATEST}" -o ${REPOLOC}/munki-latest1.pkg
+    curl -L "${MUNKI_LATEST}" -o ${REPOLOC}/munki-latest.pkg
     
 	# Write a Choices XML file for the Munki package. Thanks Rich and Greg!
 
@@ -150,21 +119,23 @@ if [[ ! -f $MUNKILOC/munkiimport ]]; then
 </plist>
 MUNKICHOICESDONE
 
-    sudo /usr/sbin/installer -dumplog -verbose -applyChoiceChangesXML "/tmp/com.github.munki-in-a-box.munkiinstall.xml" -pkg "munki-latest1.pkg" -target "/"
+    sudo /usr/sbin/installer -dumplog -verbose -applyChoiceChangesXML "/tmp/com.grahamrpugh.munkiinstall.xml" -pkg "munki-latest.pkg" -target "/"
 
     ${LOGGER} "Installed Munki Admin and Munki Core packages"
-    echo "Installed Munki packages"
+    echo "### Installed Munki packages"
+    echo
 
 else
     ${LOGGER} "Munki was already installed, I think, so I'm moving on"
-    echo "/usr/local/munki/munkiimport existed, so I am not reinstalling. Hope you really had Munki installed..."
-
+    echo "### Munkitools were already installed"
+    echo
 fi
 
 # Check for Command line tools.
 
 if [[ ! -f "/usr/bin/git" ]]; then
-    echo "You need to install the Xcode command line tools. Let me get that for you, it'll just take a minute."
+    echo "### Installing the command line tools..."
+    echo
 
 ###
 # This section written by Rich Trouton and embedded because he's awesome. Diet Coke++, Rich.
@@ -172,7 +143,6 @@ if [[ ! -f "/usr/bin/git" ]]; then
 
 # Installing the Xcode command line tools on 10.10+
  
-osx_vers=$(sw_vers -productVersion | awk -F "." '{print $2}')
 cmd_line_tools_temp_file="/tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress"
  
 # Installing the latest Xcode command line tools on 10.9.x or 10.10.x
@@ -204,8 +174,10 @@ cmd_line_tools_temp_file="/tmp/.com.apple.dt.CommandLineTools.installondemand.in
 ###
 fi
 
-echo "Great. All Tests are passed, so let's create the Munki Repo"'!'
+echo "### Great. All Tests are passed, so let's create the Munki Repo"'!'
+echo
 ${LOGGER} "All Tests Passed! On to the configuration."
+
 
 # Create the repo.
 
@@ -214,8 +186,10 @@ if [[ ! -d "${MUNKI_REPO}" ]]; then
 	mkdir -p "${MUNKI_REPO}/manifests"
 	mkdir -p "${MUNKI_REPO}/pkgs"
 	mkdir -p "${MUNKI_REPO}/pkgsinfo"
+	mkdir -p "${MUNKI_REPO}/icons"
 	${LOGGER} "Repo Created"
-	echo "Repo Created"
+	echo "### Repo Created"
+	echo
 fi
 
 chmod -R a+rX,g+w "${MUNKI_REPO}"
@@ -223,7 +197,7 @@ chmod -R a+rX,g+w "${MUNKI_REPO}"
 chmod -R a+rX,g+w "${MUNKI_REPO}" ## Thanks Arek!
 chown -R ${USER}:admin "${MUNKI_REPO}" ## Thanks Arek!
 
-${LOGGER} "Repo permissions set"
+${LOGGER} "### Repo permissions set"
 
 
 ####
@@ -232,7 +206,8 @@ ${LOGGER} "Repo permissions set"
 
 if [[ ! -f /usr/bin/pkgbuild ]]; then
     ${LOGGER} "Pkgbuild is not installed."
-    echo "Please install Xcode command line tools first."
+    echo "### Please install command line tools first. Exiting..."
+    echo 
     exit 0 # Gotta install the command line tools.
 fi
 
@@ -240,10 +215,12 @@ mkdir -p /tmp/ClientInstaller/Library/Preferences/
 
 ${DEFAULTS} write /tmp/ClientInstaller/Library/Preferences/ManagedInstalls.plist SoftwareRepoURL "http://${IP}:${MUNKI_PORT}/${REPONAME}"
 
-/usr/bin/pkgbuild --identifier ch.intellec.munkiclient.pkg --root /tmp/ClientInstaller ClientInstaller.pkg
+/usr/bin/pkgbuild --identifier com.grahamrpugh.munkiclient.pkg --root /tmp/ClientInstaller ClientInstaller.pkg
 
 ${LOGGER} "Client install pkg created."
-echo "Client install pkg is created. It's in the base of the repo."
+echo
+echo "### Client install pkg is created. It's in the base of the repo."
+echo
 
 
 ####
@@ -255,32 +232,38 @@ echo "Client install pkg is created. It's in the base of the repo."
 if [[ ! -d ${AUTOPKG} ]]; then
 
 	AUTOPKG_LATEST=$(curl https://api.github.com/repos/autopkg/autopkg/releases | python -c 'import json,sys;obj=json.load(sys.stdin);print obj[0]["assets"][0]["browser_download_url"]')
-	/usr/bin/curl -L "${AUTOPKG_LATEST}" -o autopkg-latest1.pkg
+	/usr/bin/curl -L "${AUTOPKG_LATEST}" -o autopkg-latest.pkg
 
-	sudo installer -pkg autopkg-latest1.pkg -target /
+	sudo installer -pkg autopkg-latest.pkg -target /
 
 	${LOGGER} "AutoPkg Installed"
-	echo "AutoPkg Installed"
+	echo
+	echo "### AutoPkg Installed"
+	echo
 fi
 
 ####
 # Configure AutoPkg for use with Munki and Sal
 ####
 
-if [[ `${DEFAULTS} write com.github.autopkg MUNKI_REPO` != "$REPODIR" ]]; then
-	${DEFAULTS} write com.github.autopkg MUNKI_REPO "$REPODIR"
+if [[ `${DEFAULTS} write com.github.autopkg MUNKI_REPO` != "$MUNKI_REPO" ]]; then
+	${DEFAULTS} write com.github.autopkg MUNKI_REPO "$MUNKI_REPO"
 fi
 
 ${AUTOPKG} repo-add http://github.com/autopkg/recipes.git
-${AUTOPKG} repo-add grahamgilbert-recipes
+${AUTOPKG} repo-add http://github.com/autopkg/grahamgilbert-recipes.git
+${AUTOPKG} repo-add http://github.com/autopkg/homebysix-recipes.git
+${AUTOPKG} repo-add http://github.com/autopkg/jleggat-recipes.git
+
 
 ${DEFAULTS} write com.googlecode.munki.munkiimport editor "${TEXTEDITOR}"
-${DEFAULTS} write com.googlecode.munki.munkiimport repo_path "${REPODIR}"
+${DEFAULTS} write com.googlecode.munki.munkiimport repo_path "${MUNKI_REPO}"
 ${DEFAULTS} write com.googlecode.munki.munkiimport pkginfo_extension .plist
 ${DEFAULTS} write com.googlecode.munki.munkiimport default_catalog testing
 
 ${LOGGER} "AutoPkg Configured"
-echo "AutoPkg Configured"
+echo
+echo "### AutoPkg Configured"
 
 plutil -convert xml1 ~/Library/Preferences/com.googlecode.munki.munkiimport.plist
 
@@ -291,7 +274,9 @@ plutil -convert xml1 ~/Library/Preferences/com.googlecode.munki.munkiimport.plis
 ${AUTOPKG} run ${AUTOPKGRUN}
 
 ${LOGGER} "AutoPkg Run"
-echo "AutoPkg has run"
+echo
+echo "### AutoPkg has run"
+echo 
 
 ####
 # Create new site_default manifest and add imported packages to it
@@ -300,59 +285,63 @@ echo "AutoPkg has run"
 # check for existing manifests
 if [[ -z `${MANU} list-manifests` ]]; then
 	${MANU} new-manifest site_default
-	echo "Site_Default created"
+	echo "### Site_Default created"
+	echo
 fi
 
-if [[ -z `${MANU} list-catalogs` ]]; then
-	${MANU} add-catalog testing --manifest site_default
-	echo "Testing Catalog added to Site_Default"
-	listofpkgs=($(${MANU} list-catalog-items testing development))
-	echo "List of Packages for adding to repo:" ${listofpkgs[*]}
+# Add the testing catalog to site_default to get us going
+${MANU} add-catalog testing --manifest site_default
+#${MANU} add-catalog development --manifest site_default
 
-	# Thanks Rich! Code for Array Processing borrowed from First Boot Packager
-	# Original at https://github.com/rtrouton/rtrouton_scripts/tree/master/rtrouton_scripts/first_boot_package_install/scripts
+# Thanks Rich! Code for Array Processing borrowed from First Boot Packager
 
-	tLen=${#listofpkgs[@]}
-	echo "$tLen" " packages to install"
+echo "### Testing Catalog added to Site_Default"
+echo
+listofpkgs=($(${MANU} list-catalog-items testing development))
+tLen=${#listofpkgs[@]}
+existingList=($(manifestutil display-manifest site_default | grep :))
+tLenExisting=${#existingList[@]}
+if [[ $tLenExisting != $tLen ]]; then
+	echo "### $tLen" " packages to install"
+	echo "${listofpkgs[*]}"
+	echo
 
-	for (( i=0; i<tLen; i++));
-	do
+	for (( i=0; i<tLen; i++)); do
 		${LOGGER} "Adding ${listofpkgs[$i]} to site_default"
 		${MANU} add-pkg ${listofpkgs[$i]} --manifest site_default
 		${LOGGER} "Added ${listofpkgs[$i]} to site_default"
 	done
 fi
 
-
+# Lets makecatalogs just in case
+echo
+echo "### Running makecatalogs..."
+echo
+/usr/local/munki/makecatalogs
+echo
+echo "### ...done"
+echo
 
 ####
 # Install AutoPkgr from the awesome Linde Group!
 ####
 
-${AUTOPKG} repo-add http://github.com/autopkg/homebysix-recipes.git
 ${AUTOPKG} run AutoPkgr.install
 
 ${LOGGER} "AutoPkgr Installed"
-echo "AutoPkgr Installed"
+echo "### AutoPkgr Installed"
+echo
 
-if [[ -f "$HOME/Library/Application\ Support/AutoPkgr/recipe_list.txt" ]]; then
-	mkdir -p $HOME/Library/Application\ Support/AutoPkgr
-	touch $HOME/Library/Application\ Support/AutoPkgr/recipe_list.txt
+if [[ -f "$AUTOPKGRECIPELISTLOC/recipe.list" ]]; then
+	mkdir -p "$AUTOPKGRECIPELISTLOC"
+	touch "$AUTOPKGRECIPELISTLOC/recipe.list"
 
-	echo "com.github.autopkg.munki.firefox-rc-en_US
-	com.github.autopkg.munki.google-chrome
-	com.github.autopkg.munki.textwrangler
-	com.github.grahamgilbert.Sal.munki
-	com.github.grahamgilbert.Sal-osquery.munki
-	com.github.autopkg.munki.munkitools2
-	com.github.autopkg.munki.makecatalogs" > $HOME/Library/Application\ Support/AutoPkgr/recipe_list.txt
+	echo "$AUTOPKGRRECIPES" > "$AUTOPKGRECIPELISTLOC/recipe.list"
 fi
 
 ####
 # Install Munki Admin App by the amazing Hannes Juutilainen
 ####
-
-${AUTOPKG} repo-add jleggat-recipes
 
 ${AUTOPKG} run MunkiAdmin.install
 
@@ -365,24 +354,24 @@ ${AUTOPKG} run MunkiAdmin.install
 chmod -R a+rX,g+w "${MUNKI_REPO}"
 chown -R ${USER}:admin "${MUNKI_REPO}"
 
-rm "$REPOLOC/autopkg-latest1.pkg"
-rm "$REPOLOC/munki-latest1.pkg"
+rm "$REPOLOC/autopkg-latest.pkg"
+rm "$REPOLOC/munki-latest.pkg"
 
 ${LOGGER} "All done."
 
-echo "#########"
-echo "Thank you for flying Munki in a Box Air. You now have a working repo, go forth and install your clients."
-echo "#########"
-echo "MunkiAdmin and AutoPkgr are ready to go, please launch them to complete their setup."
-echo "#########"
-echo "MunkiAdmin needs to know where your repo is, and AutoPkgr needs to have its helper tool installed."
+echo 
+echo "### You should now have a working repo."
+echo 
+echo "### MunkiAdmin and AutoPkgr are ready to go, please launch them to complete their setup."
+echo 
+echo "### MunkiAdmin needs to know where your repo is, and AutoPkgr needs to have its helper tool installed."
+echo 
+echo "### Now let's start Munki..."
 echo
-echo "#########"
-echo "Now let's start Munki..."
 
 # This autoruns the second script, if it's there!
 if [[ -f "run-munki-run.sh" ]]; then
-	bash run-munki-run.sh
+	. run-munki-run.sh
 fi
 
 
