@@ -22,10 +22,13 @@ and populates your repo with a few packages from AutoPkg.
 3. Install Munkitools on some clients. 
 4. If you have access to DNS, create an alias to the Docker host named 
    `munki.yourname.com` and add an alias (CNAME) of `munki`. You will then not need to 
-   configure Munki on the client. If you cannot create an alias, then set the ServerURL
-   on the client with the following command:
+   configure Munki on the client. If you cannot create an alias, then set the ServerURL 
+   on the client with the following command:  
    
    `sudo defaults write /Library/Preferences/ManagedInstalls.plist ServerURL http://my-docker-host:port/repo`
+   
+5. To enable reporting, configure Sal, and push out the Sal preferences to the 
+   clients (e.g. in a package).
 
 You should only need to run `./RUN-ME-FIRST.sh` once, but it won't break things if you
 run it again. 
