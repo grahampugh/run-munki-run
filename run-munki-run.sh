@@ -22,12 +22,12 @@ fi
 
 # On older Macs Docker cannot run natively and the Docker Toolbox is required, which
 # uses VirtualBox and boot2docker
-if [[ $DOCKERTYPE = "docker-machine"; then
+if [[ $DOCKERTYPE = "docker-machine" ]]; then
 	echo
 	echo "### We need to configure Virtual Box"
 	echo
 	# Check that Docker Machine exists
-	if [ -z "$(docker-machine ls | grep run_munki_run)" ]; then
+	if [[ -z "$(docker-machine ls | grep run_munki_run)" ]]; then
 		echo
 		echo "### Note that Docker-Machine is a development environment."
 		echo "### Think carefully before using this in Production."
@@ -50,7 +50,7 @@ if [[ $DOCKERTYPE = "docker-machine"; then
 	fi
 
 	# Ensure that the machine will restart after a reboot
-	if [ -f "$HOME/Library/LaunchAgents/com.docker.machine.munkido.plist" ]; then
+	if [[ -f "$HOME/Library/LaunchAgents/com.docker.machine.munkido.plist" ]]; then
 		cp "com.docker.machine.munkido.plist" "$HOME/Library/LaunchAgents/"
 		launchctl load ~/Library/LaunchAgents/com.docker.machine.default.plist
 	fi
@@ -184,6 +184,7 @@ docker run -d --name="sal" \
   -e DOCKER_SAL_TZ="Europe/Berlin" \
   macadmins/sal
 
+# optional setup of Munki-Do and Gitlab
 if [[ $MUNKI_DO_ENABLED = true ]]; then
 	# munki-do container
 	echo
