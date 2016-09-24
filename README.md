@@ -1,6 +1,10 @@
 # run-munki-run
 
-This is a one command Munki + MunkiWebAdmin2 + Sal + Apache installation. 
+This is a one command Munki + MunkiWebAdmin2 + Sal installation. Each of these has its 
+own Docker container. 
+
+An Apache container is also included. This is useful if you wish to use Virtual Hosts.
+
 It also installs MunkiTools, AutoPkg, AutoPkgr and MunkiAdmin on your machine
 and populates your repo with a few packages from AutoPkg.
 
