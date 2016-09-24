@@ -59,7 +59,7 @@ MWA2_PORT=8002
 
 ## Munki-Do settings:
 # Disabled by default. Set to true if you wish to use Munki-Do:
-MUNKI_DO_ENABLED=false
+MUNKI_DO_ENABLED=true
 # Create a new folder to house the Munki-Do Django database and point to it here.
 # If using Docker-Machine, it must be within /Users somewhere:
 MUNKI_DO_DB="/Users/Shared/munki-do-db"

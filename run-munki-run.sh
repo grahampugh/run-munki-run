@@ -122,7 +122,7 @@ ENDMSG
 	ProxyPass / http://$IP:$MWA2_PORT/
 	</VirtualHost>
 ENDMSG
-	## MWA2
+	## Munki-Do
 	if [[ $MUNKI_DO_ENABLED = true ]]; then
 		cat > "$VIRTUALHOSTSLOC/$MUNKI_DO_HOSTNAME.conf" <<'ENDMSG'
 <VirtualHost *:80>
@@ -133,6 +133,8 @@ ENDMSG
 	ProxyPass / http://$IP:$MUNKI_DO_PORT/
 	</VirtualHost>
 ENDMSG
+	fi
+fi
 
 echo "### checking for Sal database folder"
 echo
@@ -204,8 +206,8 @@ if [[ $MUNKI_DO_ENABLED = true ]]; then
 
 	## GITLAB settings (ignored if $GIT_PATH and $GITLAB_DATA are not set in settings.sh)
 	# This part definitely needs more documentation, so consider this "advanced" usage only.
-
-	if [ $GIT_PATH && $GITLAB_DATA ]; then
+	# Also it is only tested in a Docker-machine environment, so it's disabled in native mode
+	if [[ $GIT_PATH && $GITLAB_DATA && $DOCKERTYPE = "docker-machine" ]]; then
 		echo 
 		echo "### You've opted to install Gitlab. Brave choice!"
 		# Gitlab-postgres database
