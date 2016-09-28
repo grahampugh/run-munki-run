@@ -1,6 +1,6 @@
 # run-munki-run
 
-This is a one command Munki + MunkiWebAdmin2 + Sal + Apache installation. 
+This is a one command Munki + MunkiWebAdmin2 + Sal installation. 
 It also installs MunkiTools, AutoPkg, AutoPkgr and MunkiAdmin on your machine
 and populates your repo with a few packages from AutoPkg.
 
@@ -21,7 +21,8 @@ and populates your repo with a few packages from AutoPkg.
 2. Run `./RUN-ME-FIRST.sh`
 3. Install Munkitools on some clients. 
 4. If you have access to DNS, create an alias to the Docker host named 
-   `munki.yourname.com` and add an alias (CNAME) of `munki`. You will then not need to 
+   `munki.yourname.com` and add an alias (CNAME) of `munki`. You need to 
+   reverse proxy from my-docker-host:port to munki:80. You will then not need to 
    configure Munki on the client. If you cannot create an alias, then set the ServerURL 
    on the client with the following command:  
    
