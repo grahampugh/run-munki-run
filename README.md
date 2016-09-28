@@ -1,6 +1,7 @@
 # run-munki-run
 
-This is a one command Munki + MunkiWebAdmin2 + Sal installation. 
+This is a one command Munki + MunkiWebAdmin2 + Munki-Do + Sal installation 
+(You can choose whether you want MWA2 and/or Munki-Do in the settings).
 It also installs MunkiTools, AutoPkg, AutoPkgr and MunkiAdmin on your machine
 and populates your repo with a few packages from AutoPkg.
 

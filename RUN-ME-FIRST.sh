@@ -75,11 +75,11 @@ if [[ ! -f $MUNKILOC/munkiimport ]]; then
     ${LOGGER} "Grabbing and Installing the Munki Tools Because They Aren't Present"
     MUNKI_LATEST=$(curl https://api.github.com/repos/munki/munki/releases/latest | python -c 'import json,sys;obj=json.load(sys.stdin);print obj["assets"][0]["browser_download_url"]')
     
-    curl -L "${MUNKI_LATEST}" -o ${REPOLOC}/munki-latest.pkg
+    curl -L "${MUNKI_LATEST}" -o "${MUNKI_REPO}/munki-latest.pkg"
     
 	# Write a Choices XML file for the Munki package. Thanks Rich and Greg!
 
-    /bin/cat > "/tmp/com.github.munki-in-a-box.munkiinstall.xml" << 'MUNKICHOICESDONE'
+    /bin/cat > "/tmp/com.github.grahampugh.run-munki-run.munkiinstall.xml" << 'MUNKICHOICESDONE'
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
     <array>
@@ -119,7 +119,7 @@ if [[ ! -f $MUNKILOC/munkiimport ]]; then
 </plist>
 MUNKICHOICESDONE
 
-    sudo /usr/sbin/installer -dumplog -verbose -applyChoiceChangesXML "/tmp/com.grahamrpugh.munkiinstall.xml" -pkg "munki-latest.pkg" -target "/"
+    sudo /usr/sbin/installer -dumplog -verbose -applyChoiceChangesXML "/tmp/com.github.grahampugh.run-munki-run.munkiinstall.xml" -pkg "${MUNKI_REPO}/munki-latest.pkg" -target "/"
 
     ${LOGGER} "Installed Munki Admin and Munki Core packages"
     echo "### Installed Munki packages"
@@ -215,7 +215,7 @@ mkdir -p /tmp/ClientInstaller/Library/Preferences/
 
 ${DEFAULTS} write /tmp/ClientInstaller/Library/Preferences/ManagedInstalls.plist SoftwareRepoURL "http://${IP}:${MUNKI_PORT}/${REPONAME}"
 
-/usr/bin/pkgbuild --identifier com.grahamrpugh.munkiclient.pkg --root /tmp/ClientInstaller ClientInstaller.pkg
+/usr/bin/pkgbuild --identifier com.grahamrpugh.munkiclient.pkg --root /tmp/ClientInstaller "$MUNKI_REPO/ClientInstaller.pkg"
 
 ${LOGGER} "Client install pkg created."
 echo
@@ -232,9 +232,9 @@ echo
 if [[ ! -d ${AUTOPKG} ]]; then
 
 	AUTOPKG_LATEST=$(curl https://api.github.com/repos/autopkg/autopkg/releases | python -c 'import json,sys;obj=json.load(sys.stdin);print obj[0]["assets"][0]["browser_download_url"]')
-	/usr/bin/curl -L "${AUTOPKG_LATEST}" -o autopkg-latest.pkg
+	/usr/bin/curl -L "${AUTOPKG_LATEST}" -o "$MUNKI_REPO/autopkg-latest.pkg"
 
-	sudo installer -pkg autopkg-latest.pkg -target /
+	sudo installer -pkg "$MUNKI_REPO/autopkg-latest.pkg" -target /
 
 	${LOGGER} "AutoPkg Installed"
 	echo
@@ -354,8 +354,9 @@ ${AUTOPKG} run MunkiAdmin.install
 chmod -R a+rX,g+w "${MUNKI_REPO}"
 chown -R ${USER}:admin "${MUNKI_REPO}"
 
-rm "$REPOLOC/autopkg-latest.pkg"
-rm "$REPOLOC/munki-latest.pkg"
+rm "$MUNKI_REPO/autopkg-latest.pkg"
+rm -rf /tmp/ClientInstaller
+# rm "$MUNKI_REPO/munki-latest.pkg"  # let's keep this available for download by clients
 
 ${LOGGER} "All done."
 
