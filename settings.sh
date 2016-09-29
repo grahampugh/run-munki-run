@@ -5,6 +5,9 @@ REPOLOC="/Users/Shared"
 REPONAME="repo"
 MUNKI_REPO="${REPOLOC}/${REPONAME}"
 
+# Databases location. This should be away from shared directories e.g. the web root.
+DBLOC="$HOME/munki-databases"
+
 # Commands
 MUNKILOC="/usr/local/munki"
 GIT="/usr/bin/git"
@@ -46,9 +49,6 @@ ENDMSG
 ## Docker variables
 
 # Munki container variables:
-# If you have access to DNS, use the Apache container to proxy each Docker web service
-# to a hostname. I recommend "munki" for the Munki host so you don't need to set a 
-# preference.
 MUNKI_HOSTNAME="munki.grahamrpugh.com"
 # Set the public port on which you wish to access Munki 
 MUNKI_PORT=80
@@ -56,9 +56,7 @@ MUNKI_PORT=80
 ## Sal settings:
 # Create a new folder to house the Sal Django database and point to it here:
 # If using Docker-Machine, it must be within /Users somewhere:
-SAL_DB="${REPOLOC}/sal-db"
-# Sal hostname, if you have DNS aliases setup
-SAL_HOSTNAME="sal.grahamrpugh.com"
+SAL_DB="${DBLOC}/sal-db"
 # Set the public port on which you wish to access Sal 
 SAL_PORT=8001
 
@@ -67,9 +65,7 @@ SAL_PORT=8001
 MWA2_ENABLED=false
 # Create a new folder to house the MWA2 Django database and point to it here:
 # If using Docker-Machine, it must be within /Users somewhere:
-MWA2_DB="${REPOLOC}/mwa2-db"
-# MWA2 hostname, if you have DNS aliases setup
-MWA2_HOSTNAME="mwa2.grahamrpugh.com"
+MWA2_DB="${DBLOC}/mwa2-db"
 # Set the public port on which you wish to access MWA2 
 MWA2_PORT=8003
 
@@ -78,9 +74,7 @@ MWA2_PORT=8003
 MUNKI_DO_ENABLED=true
 # Create a new folder to house the Munki-Do Django database and point to it here.
 # If using Docker-Machine, it must be within /Users somewhere:
-MUNKI_DO_DB="/Users/Shared/munki-do-db"
-# MUNKI_DO hostname, if you have DNS aliases setup
-MUNKI_DO_HOSTNAME="munkido.grahamrpugh.com"
+MUNKI_DO_DB="${DBLOC}/munki-do-db"
 # Set the public port on which you wish to access Munki-Do
 MUNKI_DO_PORT=8002
 #
