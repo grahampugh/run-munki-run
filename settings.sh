@@ -93,6 +93,6 @@ TIME_ZONE='Europe/Zurich'
 LOGGER="/usr/bin/logger -t Run-Munki-Run"
 
 # IP address - you'll need to change to en0 for wired, en1 if you're running on wifi.
-IP=`ipconfig getifaddr en0`
+IP=$(ipconfig getifaddr en0)
 
 
