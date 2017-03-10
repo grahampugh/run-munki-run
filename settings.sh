@@ -28,7 +28,7 @@ SCRIPTDIR="/usr/local/bin"
 AUTOPKG_RECIPE_LIST="$HOME/Library/AutoPkg/recipe-list.txt"
 
 # AutoPkg repos
-read -r -d '' AUTOPKGREPOS << ENDMSG
+read -r -d '' AUTOPKGREPOS <<ENDMSG
 recipes
 grahamgilbert-recipes
 hjuutilainen-recipes
@@ -42,7 +42,7 @@ grahampugh/recipes
 ENDMSG
 
 # Autopkg selections
-read -r -d '' AUTOPKGRUN << ENDMSG
+read -r -d '' AUTOPKGRUN <<ENDMSG
 AdobeFlashPlayer.munki.recipe
 AdobeReader.munki.recipe
 AdobeReaderUpdates.munki.recipe
@@ -51,6 +51,7 @@ BBEdit.munki.recipe
 Firefox.munki.recipe
 GoogleChrome.munki.recipe
 KeePassX.munki.recipe
+osquery.munki.recipe
 Recipe Robot.munki.recipe
 Sal-osquery.munki.recipe
 Sal.munki.recipe
@@ -69,9 +70,8 @@ AUTOPKG_RECIPE_LIST_LOC="$HOME/Library/AutoPkg/RecipeList"
 ## Docker variables
 
 # Munki container variables:
-MUNKI_HOSTNAME="munki.grahamrpugh.com"
 # Set the public port on which you wish to access Munki
-MUNKI_PORT=8000
+MUNKI_PORT=80
 
 ## Sal settings:
 # Create a new folder to house the Sal Django database and point to it here:
@@ -115,6 +115,6 @@ LOGGER="/usr/bin/logger -t Run-Munki-Run"
 # IP address - you'll need to change to en0 for wired, en1 if you're running on wifi.
 IP=$(ipconfig getifaddr en0)
 
-# Proxy Servers - add these if you need to for curl 
+# Proxy Servers - add these if you need to for curl
 #HTTP_PROXY=http://proxy.my.company:2010/
 #HTTPS_PROXY=$HTTP_PROXY

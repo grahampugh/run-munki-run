@@ -82,7 +82,7 @@ docker run -d --name="sal" \
   -e ADMIN_PASS=pass \
   -e DOCKER_SAL_TZ="Europe/Zurich" \
   macadmins/sal
-  
+
 # Optionally start a Munki-Do container
 if [[ $MUNKI_DO_ENABLED = true ]]; then
     echo
@@ -103,47 +103,43 @@ fi
 echo
 echo "### All done!"
 echo
-echo "--- SAL SETUP ---"
-echo "Don't forget to set your Sal client preferences. Open Sal at the address below,"
-echo "create a business unit and a machine group, and then copy the key into "
-echo "a shell script. You then need to run this script on the client, e.g. "
-echo "via a Munki package. A good method is to install Munki-Pkg on your computer:"
+echo "--- SAL SETUP INSTRUCTIONS ---"
 echo
-echo "---"
-echo "git clone https://github.com/munki/munki-pkg.git"
-echo "cd munki-pkg"
-echo "./munkipkg --create sal-preferences"
-echo "nano sal-preferences/scripts/postinstall"
-echo "---"
+echo "1. Open Sal at http://$IP:$SAL_PORT"
+echo "2. Create a business unit named 'Default' and a machine group named 'site_default'."
+echo "3. Choose the 'person' menu at the top right and then choose Settings."
+echo "4. From the sidebar, choose API keys and then choose to make a new one."
+echo "5. Give it a name so you can recognise it - e.g. 'PKG Generator'."
+echo "6. You will then be given a public key and a private key."
+echo "7. Enter the following command in terminal to generate the enroll package:"
 echo
-echo "Copy the following into postinstall:"
+echo "python sal_package_generator.py --sal_url=http://$IP:$SAL_PORT --public_key=<PUBLIC_KEY> --private_key=<PRIVATE_KEY> --pkg_id=com.salopensource.sal_enroll"
 echo
-echo "---"
-echo "#!/bin/bash"
-echo "sudo defaults write /Library/Preferences/com.github.salopensource.sal.plist ServerURL \"http://$IP:$SAL_PORT\""
-echo "sudo defaults write /Library/Preferences/com.github.salopensource.sal.plist key \"verylongnumberinSalinterface\""
-echo "---"
+echo "8. Enter the following commands to import the package to Munki:"
 echo
-echo "Then do the following:"
+echo "munkiimport sal-enroll-site_default.pkg --subdirectory config/sal --unattended-install --displayname=\"Sal Enrollment for site_default\" --developer=\"Graham Gilbert\" -n"
+echo "manifestutil add-pkg sal-enroll-site_default --manifest $MUNKI_DEFAULT_SOFTWARE_MANIFEST"
+echo "makecatalogs"
 echo
-echo "---"
-echo "./munkipkg sal-preferences"
-echo "munkiimport sal-preferences/build/sal-preferences-1.0.pkg --subdirectory config/sal --unattended-install --displayname=\"Sal Preferences\" --developer=\"Graham Gilbert\" -n"
-echo "manifestutil add-pkg sal-preferences --manifest $MUNKI_DEFAULT_SOFTWARE_MANIFEST"
-echo "---"
-echo 
-echo "--- END SAL SETUP ---"
+echo "--- END OF SAL SETUP INSTRUCTIONS ---"
 echo
-echo "###"
-echo "### Your Munki URL is: http://$IP:$MUNKI_PORT"
-echo "### Test your Munki URL with: http://$IP:$MUNKI_PORT/$REPONAME/catalogs/all"
+echo "--- DETAILS ---"
+echo
+echo "Your Munki URL is: http://$IP:$MUNKI_PORT"
+echo "(test your Munki URL with: http://$IP:$MUNKI_PORT/$REPONAME/catalogs/all)"
 if [[ $MWA2_ENABLED = true ]]; then
-    echo "### Your MWA2 URL is: http://$IP:$MWA2_PORT"
+    echo "Your MWA2 URL is: http://$IP:$MWA2_PORT"
 fi
-echo "### Your Sal URL is: http://$IP:$SAL_PORT"
 if [[ $MUNKI_DO_ENABLED = true ]]; then
-    echo "### Your Munki-Do URL is: http://$IP:$MUNKI_DO_PORT"
+    echo "Your Munki-Do URL is: http://$IP:$MUNKI_DO_PORT"
 fi
-
-
-
+echo "Your Sal URL is: http://$IP:$SAL_PORT"
+echo
+echo "Download the Munki Client Installer Pkg on a client from the following URL:"
+echo
+echo "http://$IP:$MUNKI_PORT/$REPONAME/installers/ClientInstaller.pkg"
+echo
+echo "To update Autopkg recipes in the future, run the following command:"
+echo
+echo "autopkg run --recipe-list \"${AUTOPKG_RECIPE_LIST}\""
+echo

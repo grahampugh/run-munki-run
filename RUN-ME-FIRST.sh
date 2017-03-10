@@ -241,7 +241,8 @@ munkiMakeCatalogs() {
 munkiAddPackages() {
     # Code for Array Processing borrowed from First Boot Packager. Thanks Rich!
     # Changed logic to allow for items with spaces in the names.
-    listofpkgs="$(${MANU} list-catalog-items testing development production)"
+    existingCatalogs=($(${MANU} list-catalogs))
+    listofpkgs="$(${MANU} list-catalog-items ${existingCatalogs[@]})"
     tLen=$(echo "$listofpkgs" | wc -l)
     existingList="$(manifestutil display-manifest "$1" | grep -v :))"
     tLenExisting=$(echo "$existingList" | wc -l)
@@ -261,6 +262,7 @@ munkiAddPackages() {
         done
     fi
 }
+
 
 # -------------------------------------------------------------------------------------- #
 ## Main section
@@ -386,9 +388,18 @@ fi
 # Create new site_default and core_software manifests (nothing happens if they already exist)
 munkiCreateManifests site_default $MUNKI_DEFAULT_SOFTWARE_MANIFEST
 
-# Add the testing catalog to site_default (nothing happens if if already added)
-${MANU} add-catalog testing --manifest site_default
-echo "### Testing Catalog added to Site_Default"
+# Test whether there are already catalogs in the site_default manifest
+defaultManifestContent="$(${MANU} display-manifest site_default)"
+line_after_catalogs=$(echo $defaultManifestContent | grep -A1 Catalogs: | grep -v Catalogs:)
+if [[ "$(echo $line_after_catalogs | grep :)" ]]; then
+    # no catalogs found, let's add them
+    # the order is important! The second item takes priority
+    ${MANU} add-catalog production --manifest site_default
+    ${MANU} add-catalog testing --manifest site_default
+    echo "### testing and production catalogs added to site_default"
+else
+    echo "### Catalogs already present in site_default. Moving on..."
+fi
 echo
 
 # Add the core_software manifest as an included manifest (nothing happens if if already added)
@@ -413,11 +424,7 @@ rm -rf "$MUNKI_REPO/run-munki-run"
 ${LOGGER} "All done."
 
 echo
-echo "### You should now have a populated repo."
-echo
-echo "### To update Autopkg recipes in the future, run the following command:"
-echo "### autopkg run --recipelist \"${AUTOPKG_RECIPE_LIST}\""
-echo
+echo "### You should now have a populated repo!"
 echo "### Now let's start the Munki server..."
 echo
 
