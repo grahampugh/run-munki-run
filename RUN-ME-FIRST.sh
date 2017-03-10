@@ -35,7 +35,7 @@ versionCheck() {
         ${LOGGER} "Could not run because the version of the OS does not meet requirements"
         echo "### Could not run because the version of the OS does not meet requirements."
         echo
-        exit 2 
+        exit 2
     else
         ${LOGGER} "Mac OS X 10.10 or later is installed. Proceeding..."
     fi
@@ -50,11 +50,13 @@ rootCheck() {
     fi
 }
 
-installMunki() {
+downloadMunki() {
     MUNKI_LATEST=$(curl https://api.github.com/repos/munki/munki/releases/latest | python -c 'import json,sys;obj=json.load(sys.stdin);print obj["assets"][0]["browser_download_url"]')
-    
+
     curl -L "${MUNKI_LATEST}" -o "$1/munki-latest.pkg"
-    
+}
+
+installMunki() {
     # Write a Choices XML file for the Munki package. Thanks Rich and Greg!
 
     /bin/cat > "/tmp/com.github.grahampugh.run-munki-run.munkiinstall.xml" << 'MUNKICHOICESDONE'
@@ -97,13 +99,12 @@ installMunki() {
 </plist>
 MUNKICHOICESDONE
 
-    sudo /usr/sbin/installer -dumplog -verbose -applyChoiceChangesXML "/tmp/com.github.grahampugh.run-munki-run.munkiinstall.xml" -pkg "${MUNKI_REPO}/munki-latest.pkg" -target "/"
+    sudo /usr/sbin/installer -dumplog -verbose -applyChoiceChangesXML "/tmp/com.github.grahampugh.run-munki-run.munkiinstall.xml" -pkg "$1/munki-latest.pkg" -target "/"
 
     ${LOGGER} "Installed Munki Admin and Munki Core packages"
     echo "### Installed Munki packages"
     echo
 }
-
 
 # Installing the Xcode command line tools on 10.10+
 # This section written by Rich Trouton.
@@ -111,21 +112,21 @@ installCommandLineTools() {
     echo "### Installing the command line tools..."
     echo
     cmd_line_tools_temp_file="/tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress"
- 
+
     # Installing the latest Xcode command line tools on 10.9.x or 10.10.x
- 
+
     if [[ "$osx_vers" -ge 9 ]] ; then
- 
-        # Create the placeholder file which is checked by the softwareupdate tool 
+
+        # Create the placeholder file which is checked by the softwareupdate tool
         # before allowing the installation of the Xcode command line tools.
         touch "$cmd_line_tools_temp_file"
-    
+
         # Find the last listed update in the Software Update feed with "Command Line Tools" in the name
         cmd_line_tools=$(softwareupdate -l | awk '/\*\ Command Line Tools/ { $1=$1;print }' | tail -1 | sed 's/^[[ \t]]*//;s/[[ \t]]*$//;s/*//' | cut -c 2-)
-    
+
         #Install the command line tools
         sudo softwareupdate -i "$cmd_line_tools" -v
-    
+
         # Remove the temp file
         if [[ -f "$cmd_line_tools_temp_file" ]]; then
             rm "$cmd_line_tools_temp_file"
@@ -156,19 +157,49 @@ createMunkiClientInstaller() {
     if [[ ! -f /usr/bin/pkgbuild ]]; then
         ${LOGGER} "Pkgbuild is not installed."
         echo "### Please install command line tools first. Exiting..."
-        echo 
+        echo
         exit 0 # Gotta install the command line tools.
     fi
 
-    mkdir -p /tmp/ClientInstaller/Library/Preferences/
+    # Set the SoftwareRepoURL
+    mkdir -p "$4/run-munki-run/ClientInstaller/Library/Preferences/"
+    ${DEFAULTS} write "$4/run-munki-run/ClientInstaller/Library/Preferences/ManagedInstalls.plist" SoftwareRepoURL "http://$1:$2/$3"
 
-    ${DEFAULTS} write /tmp/ClientInstaller/Library/Preferences/ManagedInstalls.plist SoftwareRepoURL "http://$1:$2/$3"
+    # Add the postinstall script that downloads Munki
+    mkdir -p "$4/run-munki-run/scripts"
+    cat > "$4/run-munki-run/scripts/postinstall" <<ENDMSG
+#!/bin/bash
+curl -L "http://$1:$2/$3/munki-latest.pkg" -o "/tmp/munki-latest.pkg"
+installer -pkg "/tmp/munki-latest.pkg" -target /
+rm /tmp/munki-latest.pkg
+ENDMSG
+    chmod a+x "$4/run-munki-run/scripts/postinstall"
 
-    /usr/bin/pkgbuild --identifier com.grahamrpugh.munkiclient.pkg --root /tmp/ClientInstaller "$4/ClientInstaller.pkg"
-    ${LOGGER} "Client install pkg created."
-    echo
-    echo "### Client install pkg is created. It's in the base of the repo."
-    echo
+    # Add restart requirement to install pkg
+    cat > "$4/run-munki-run/PackageInfo" <<ENDMSG
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<pkg-info postinstall-action="restart"/>
+ENDMSG
+
+    # Build the package
+    /usr/bin/pkgbuild --info "$4/run-munki-run/PackageInfo" \
+        --identifier com.grahamrpugh.munkiclient.pkg \
+        --root "$4/run-munki-run//ClientInstaller" \
+        --scripts "$4/run-munki-run/scripts" \
+        "$4/ClientInstaller.pkg"
+
+    if [[ -f "$4/ClientInstaller.pkg" ]]; then
+        ${LOGGER} "Client install pkg created."
+        echo
+        echo "### Client install pkg is created. It's in the base of the repo."
+        echo
+    else
+        ${LOGGER} "Client install pkg failed."
+        echo
+        echo "### Client install pkg failed."
+        echo
+        exit 2
+    fi
 }
 
 # Get AutoPkg
@@ -207,24 +238,25 @@ munkiMakeCatalogs() {
 
 # Munki add packages to manifest
 munkiAddPackages() {
-    # Code for Array Processing borrowed from First Boot Packager. Thanks Rich! 
-    listofpkgs=($(${MANU} list-catalog-items testing development production))
-    tLen=${#listofpkgs[@]}
-    existingList=($(manifestutil display-manifest $1 | grep :))
-    tLenExisting=${#existingList[@]}
+    # Code for Array Processing borrowed from First Boot Packager. Thanks Rich!
+    # Changed logic to allow for items with spaces in the names.
+    listofpkgs="$(${MANU} list-catalog-items testing development production)"
+    tLen=$(echo "$listofpkgs" | wc -l)
+    existingList="$(manifestutil display-manifest "$1" | grep -v :))"
+    tLenExisting=$(echo "$existingList" | wc -l)
     if [[ $tLenExisting != $tLen ]]; then
-        echo "### $tLen" " packages to install"
-        echo "${listofpkgs[*]}"
+        echo "### $tLen" " packages to install:"
+        echo "$listofpkgs"
         echo
 
-        for (( i=0; i<tLen; i++ )); do
-            ${LOGGER} "Adding ${listofpkgs[$i]} to $1"
+        printf '%s\n' "$listofpkgs" | while read -r line; do
+            ${LOGGER} "Adding $line to $1"
             optionalInstall=""
-            if [[ -z $(echo "${listofpkgs[$i]}" | egrep -i 'munki|sal') ]]; then
+            if [[ -z $(echo "$line" | egrep -i 'munki|sal') ]]; then
                 optionalInstall="--section optional_installs"
             fi
-            ${MANU} add-pkg ${listofpkgs[$i]} --manifest "$1" $optionalInstall
-            ${LOGGER} "Added ${listofpkgs[$i]} to $1"
+            ${MANU} add-pkg "$line" --manifest "$1" $optionalInstall
+            ${LOGGER} "Added $line to $1"
         done
     fi
 }
@@ -234,6 +266,15 @@ munkiAddPackages() {
 
 # Establish our Basic Variables:
 . settings.sh
+
+# Set proxy if populated
+if [[ -z $HTTP_PROXY ]]; then
+    export http_proxy=$HTTP_PROXY
+fi
+if [[ -z $HTTPS_PROXY ]]; then
+    export https_proxy=$HTTPS_PROXY
+fi
+
 
 echo
 echo "### Welcome to Run-Munki-Run, a reworking of Tom Bridge's awesome Munki-In-A-Box."
@@ -256,16 +297,16 @@ fi
 
 ${LOGGER} "Starting up..."
 
-####
-# Checks
-####
-
+## Checks
 
 # 10.10+ for the Web Root Location.
 versionCheck 10
 
 # Check that the script is NOT running as root
 rootCheck
+
+# Let's get the latest Munki Installer
+downloadMunki "${MUNKI_REPO}"
 
 # Install Munki if it isn't already there
 if [[ ! -f $MUNKILOC/munkiimport ]]; then
@@ -316,7 +357,7 @@ if [[ $(${DEFAULTS} read com.github.autopkg MUNKI_REPO) != "${MUNKI_REPO}" ]]; t
     echo "${MUNKI_REPO} set in AutoPkg"
 fi
 
-# Check if there is already an AutoPkg recipe list. 
+# Check if there is already an AutoPkg recipe list.
 # If so we can skip running AutoPkg here as it has already been done in the past
 if [[ ! -f "${AUTOPKG_RECIPE_LIST}" ]]; then
     # Add AutoPkg recipes
@@ -338,44 +379,44 @@ if [[ ! -f "${AUTOPKG_RECIPE_LIST}" ]]; then
     ${LOGGER} "AutoPkg has Run"
     echo
     echo "### AutoPkg has run"
-    echo 
+    echo
 fi
 
-# Check for existing manifests, create them if not there, but don't mess with existing setup
-if [[ -z $(${MANU} list-manifests) ]]; then
-    # Create new site_default and core_software manifests
-    munkiCreateManifests site_default $MUNKI_DEFAULT_SOFTWARE_MANIFEST
-    
-    # Add the testing catalog to site_default
-    ${MANU} add-catalog testing --manifest site_default
-    echo "### Testing Catalog added to Site_Default"
-    echo
+# Create new site_default and core_software manifests (nothing happens if they already exist)
+munkiCreateManifests site_default $MUNKI_DEFAULT_SOFTWARE_MANIFEST
 
-    # Add the core_software manifest as an included manifest
-    ${MANU} add-included-manifest "$MUNKI_DEFAULT_SOFTWARE_MANIFEST" --manifest site_default
-    echo "### $MUNKI_DEFAULT_SOFTWARE_MANIFEST manifest added to as an included manifest to Site_Default"
-    echo
+# Add the testing catalog to site_default (nothing happens if if already added)
+${MANU} add-catalog testing --manifest site_default
+echo "### Testing Catalog added to Site_Default"
+echo
 
-    # Add packages to software manifest
-    munkiAddPackages $MUNKI_DEFAULT_SOFTWARE_MANIFEST
-fi
+# Add the core_software manifest as an included manifest (nothing happens if if already added)
+${MANU} add-included-manifest "$MUNKI_DEFAULT_SOFTWARE_MANIFEST" --manifest site_default
+echo "### $MUNKI_DEFAULT_SOFTWARE_MANIFEST manifest added to as an included manifest to Site_Default"
+echo
+
+# Add packages to software manifest
+munkiAddPackages $MUNKI_DEFAULT_SOFTWARE_MANIFEST
+
+# Generate icons for the added packages using Munki's iconimporter command
+echo "### Generating icons for the added packages using Munki's iconimporter command"
+iconimporter
 
 # Let's makecatalogs just in case
 munkiMakeCatalogs
 
 # Clean Up When Done
 rm "$MUNKI_REPO/autopkg-latest.pkg"
-rm -rf /tmp/ClientInstaller
-# rm "$MUNKI_REPO/munki-latest.pkg"  # let's keep this available for download by clients
+rm -rf "$MUNKI_REPO/run-munki-run"
 
 ${LOGGER} "All done."
 
-echo 
+echo
 echo "### You should now have a populated repo."
 echo
 echo "### To update Autopkg recipes in the future, run the following command:"
 echo "### autopkg run --recipelist \"${AUTOPKG_RECIPE_LIST}\""
-echo 
+echo
 echo "### Now let's start the Munki server..."
 echo
 
