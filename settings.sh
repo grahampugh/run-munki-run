@@ -115,6 +115,6 @@ LOGGER="/usr/bin/logger -t Run-Munki-Run"
 # IP address - you'll need to change to en0 for wired, en1 if you're running on wifi.
 IP=$(ipconfig getifaddr en0)
 
-# Proxy Servers - add these if you need to: these will also be written to the Munki Client Installer
-HTTP_PROXY=http://proxy.eu.novartis.net:2010/
-HTTPS_PROXY=$HTTP_PROXY
+# Proxy Servers - add these if you need to for curl 
+#HTTP_PROXY=http://proxy.my.company:2010/
+#HTTPS_PROXY=$HTTP_PROXY

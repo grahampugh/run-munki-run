@@ -53,6 +53,7 @@ rootCheck() {
 downloadMunki() {
     MUNKI_LATEST=$(curl https://api.github.com/repos/munki/munki/releases/latest | python -c 'import json,sys;obj=json.load(sys.stdin);print obj["assets"][0]["browser_download_url"]')
 
+    mkdir -p "$1"
     curl -L "${MUNKI_LATEST}" -o "$1/munki-latest.pkg"
 }
 
@@ -186,9 +187,9 @@ ENDMSG
         --identifier com.grahamrpugh.munkiclient.pkg \
         --root "$4/run-munki-run//ClientInstaller" \
         --scripts "$4/run-munki-run/scripts" \
-        "$4/ClientInstaller.pkg"
+        "$4/$5/ClientInstaller.pkg"
 
-    if [[ -f "$4/ClientInstaller.pkg" ]]; then
+    if [[ -f "$4/$5/ClientInstaller.pkg" ]]; then
         ${LOGGER} "Client install pkg created."
         echo
         echo "### Client install pkg is created. It's in the base of the repo."
@@ -306,12 +307,12 @@ versionCheck 10
 rootCheck
 
 # Let's get the latest Munki Installer
-downloadMunki "${MUNKI_REPO}"
+downloadMunki "${MUNKI_REPO}/installers"
 
 # Install Munki if it isn't already there
 if [[ ! -f $MUNKILOC/munkiimport ]]; then
     ${LOGGER} "Grabbing and Installing the Munki Tools Because They Aren't Present"
-    installMunki "${MUNKI_REPO}"
+    installMunki "${MUNKI_REPO}/installers"
 else
     ${LOGGER} "Munki was already installed, I think, so I'm moving on"
     echo "### Munkitools were already installed"
@@ -332,7 +333,7 @@ ${LOGGER} "All Tests Passed! On to the configuration."
 createMunkiRepo "${MUNKI_REPO}"
 
 # Create a client installer pkg pointing to this repo. Thanks Nick!
-createMunkiClientInstaller "${IP}" "${MUNKI_PORT}" "${REPONAME}" "${MUNKI_REPO}"
+createMunkiClientInstaller "${IP}" "${MUNKI_PORT}" "${REPONAME}" "${MUNKI_REPO}" "installers"
 
 # Configure MunkiTools on this computer
 ${DEFAULTS} write com.googlecode.munki.munkiimport editor "${TEXTEDITOR}"
