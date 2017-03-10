@@ -4,6 +4,7 @@
 REPOLOC="/Users/Shared"
 REPONAME="repo"
 MUNKI_REPO="${REPOLOC}/${REPONAME}"
+MUNKI_DEFAULT_SOFTWARE_MANIFEST="core_software"
 
 # Databases location. This should be away from shared directories e.g. the web root.
 DBLOC="$HOME/munki-databases"
@@ -24,27 +25,46 @@ osvers=$(sw_vers -productVersion | awk -F. '{print $2}') # Thanks Rich Trouton
 # Some other directories
 MAINPREFSDIR="/Library/Preferences"
 SCRIPTDIR="/usr/local/bin"
+AUTOPKG_RECIPE_LIST="$HOME/Library/AutoPkg/recipe-list.txt"
+
+# AutoPkg repos
+read -r -d '' AUTOPKGREPOS << ENDMSG
+recipes
+grahamgilbert-recipes
+hjuutilainen-recipes
+homebysix-recipes
+jleggat-recipes
+keeleysam-recipes
+killahquam-recipes
+scriptingosx-recipes
+valdore86-recipes
+grahampugh/recipes
+ENDMSG
 
 # Autopkg selections
 read -r -d '' AUTOPKGRUN << ENDMSG
-GoogleChrome.munki \
-TextWrangler.munki \
-munkitools2.munki \
-Sal.munki \
-MakeCatalogs.munki
+AdobeFlashPlayer.munki.recipe
+AdobeReader.munki.recipe
+AdobeReaderUpdates.munki.recipe
+Atom.munki.recipe
+BBEdit.munki.recipe
+Firefox.munki.recipe
+GoogleChrome.munki.recipe
+KeePassX.munki.recipe
+Recipe Robot.munki.recipe
+Sal-osquery.munki.recipe
+Sal.munki.recipe
+Slack.munki.recipe
+Smultron8.munki.recipe
+SublimeText3.munki.recipe
+Textmate.munki.recipe
+VisualStudioCode.munki.recipe
+munkitools2.munki.recipe
+MakeCatalogs.munki.recipe
 ENDMSG
 
 # AutoPkgr stuff
-AUTOPKGRECIPELISTLOC="$HOME/Library/Application Support/AutoPkgr"
-
-# These should match the Autopkg selections. Sorry, you'll have to look up the names.
-read -r -d '' AUTOPKGRRECIPES << ENDMSG
-com.github.autopkg.munki.google-chrome
-com.github.autopkg.munki.textwrangler
-com.github.grahamgilbert.Sal.munki
-com.github.autopkg.munki.munkitools2
-com.github.autopkg.munki.makecatalogs
-ENDMSG
+AUTOPKG_RECIPE_LIST_LOC="$HOME/Library/AutoPkg/RecipeList"
 
 ## Docker variables
 
