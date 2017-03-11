@@ -136,7 +136,7 @@ installCommandLineTools() {
 }
 
 createMunkiRepo() {
-    munkiFolderList=( "catalogs", "manifests", "pkgs", "pkgsinfo", "icons" )
+    munkiFolderList=( "catalogs" "manifests" "pkgs" "pkgsinfo" "icons" )
     for i in ${munkiFolderList[@]}; do
         mkdir -p "$1/$i"
         echo "### $i folder present and correct!"
