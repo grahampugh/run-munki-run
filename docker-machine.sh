@@ -7,7 +7,10 @@
 . settings.sh
 
 # Check if the Munki server  website is up - if so, no need to restart it
-curl -s -o "/dev/null" "http://${IP}/${REPONAME}/catalogs/all"
+repoCheckURL="http://${IP}:${MUNKI_PORT}/${REPONAME}/catalogs/all"
+echo $repoCheckURL
+curl -s -o "/dev/null" $repoCheckURL
+
 if [ $? -ne 0 ] ; then
     echo
     echo "### We need to configure Virtual Box"
