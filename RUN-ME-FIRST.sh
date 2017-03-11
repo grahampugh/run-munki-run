@@ -170,7 +170,7 @@ createMunkiClientInstaller() {
     mkdir -p "$4/run-munki-run/scripts"
     cat > "$4/run-munki-run/scripts/postinstall" <<ENDMSG
 #!/bin/bash
-curl -L "http://$1:$2/$3/munki-latest.pkg" -o "/tmp/munki-latest.pkg"
+curl -L "http://$1:$2/$3/installers/munki-latest.pkg" -o "/tmp/munki-latest.pkg"
 installer -pkg "/tmp/munki-latest.pkg" -target /
 rm /tmp/munki-latest.pkg
 ENDMSG

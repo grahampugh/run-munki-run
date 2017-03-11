@@ -71,7 +71,8 @@ AUTOPKG_RECIPE_LIST_LOC="$HOME/Library/AutoPkg/RecipeList"
 
 # Munki container variables:
 # Set the public port on which you wish to access Munki
-MUNKI_PORT=80
+# Note: Docker-Machine with VirtualBox cannot forward ports under 1024
+MUNKI_PORT=8000
 
 ## Sal settings:
 # Create a new folder to house the Sal Django database and point to it here:
