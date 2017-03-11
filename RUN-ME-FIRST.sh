@@ -136,20 +136,16 @@ installCommandLineTools() {
 }
 
 createMunkiRepo() {
-    if [[ ! -d "$1" ]]; then
-        mkdir -p "$1/catalogs"
-        mkdir -p "$1/manifests"
-        mkdir -p "$1/pkgs"
-        mkdir -p "$1/pkgsinfo"
-        mkdir -p "$1/icons"
-        ${LOGGER} "Repo Created"
-        echo "### Repo Created"
-        echo
-    fi
+    munkiFolderList=( "catalogs", "manifests", "pkgs", "pkgsinfo", "icons" )
+    for i in ${munkiFolderList[@]}; do
+        mkdir -p "$1/$i"
+    done
+    ${LOGGER} "Repo present and correct!"
+    echo "### Repo present and correct!"
+    echo
 
     chmod -R a+rX,g+w "$1" ## Thanks Arek!
     chown -R ${USER}:admin "$1" ## Thanks Arek!
-
     ${LOGGER} "### Repo permissions set"
 }
 
