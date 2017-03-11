@@ -373,13 +373,15 @@ if [[ ! -f "${AUTOPKG_RECIPE_LIST}" ]]; then
 
     # Create a recipe list file so it's easy to run in the future
     echo "${AUTOPKGRUN}" >> "${AUTOPKG_RECIPE_LIST}"
-    ${AUTOPKG} run --recipe-list="${AUTOPKG_RECIPE_LIST}"
-
-    ${LOGGER} "AutoPkg has Run"
-    echo
-    echo "### AutoPkg has run"
-    echo
 fi
+
+# Run the AutoPkg recipe list 
+${AUTOPKG} run --recipe-list="${AUTOPKG_RECIPE_LIST}"
+
+${LOGGER} "AutoPkg has Run"
+echo
+echo "### AutoPkg has run"
+echo
 
 # Create new site_default and core_software manifests (nothing happens if they already exist)
 munkiCreateManifests site_default $MUNKI_DEFAULT_SOFTWARE_MANIFEST
