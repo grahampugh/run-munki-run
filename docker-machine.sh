@@ -55,5 +55,7 @@ if [ $? -ne 0 ] ; then
         exit 0
     fi
 else
-    echo "Website is up, so nothing required here."
+    echo
+    echo "### Website is up, so nothing required here."
+    echo
 fi
