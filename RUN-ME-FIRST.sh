@@ -139,9 +139,9 @@ createMunkiRepo() {
     munkiFolderList=( "catalogs", "manifests", "pkgs", "pkgsinfo", "icons" )
     for i in ${munkiFolderList[@]}; do
         mkdir -p "$1/$i"
+        echo "### $i folder present and correct!"
     done
     ${LOGGER} "Repo present and correct!"
-    echo "### Repo present and correct!"
     echo
 
     chmod -R a+rX,g+w "$1" ## Thanks Arek!
