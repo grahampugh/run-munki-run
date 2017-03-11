@@ -44,8 +44,8 @@ elif [[ $(which docker-machine) && -d "/Applications/VirtualBox.app" ]]; then
     echo "Docker Toolbox is installed, but you need to set up the shell environment to run docker commands"
     echo "Please run the following commands:"
     echo
-    echo "docker-machine env default"
-    echo "eval $(docker-machine env default)"
+    echo "# docker-machine env default"
+    echo "# eval $(docker-machine env default)"
     echo
     echo "Then re-run ./run-munki-run.sh"
     echo "---"
