@@ -45,7 +45,7 @@ elif [[ $(which docker-machine) && -d "/Applications/VirtualBox.app" ]]; then
     echo "Please run the following commands:"
     echo
     echo "# docker-machine env default"
-    echo "# eval $(docker-machine env default)"
+    echo '# eval $(docker-machine env default)'
     echo
     echo "Then re-run ./run-munki-run.sh"
     echo "---"
