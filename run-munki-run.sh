@@ -12,7 +12,7 @@ dockerType() {
     if [[ -d "/Applications/Docker.app" && $(which docker) ]]; then
         local DOCKER_TYPE="native"
         echo $DOCKER_TYPE
-    elif [[ $(which docker-machine) && -d "/Applications/VirtualBox.app" && $(which docker) ]]; then
+    elif [[ $(which docker-machine) && -d "/Applications/VirtualBox.app" && $(docker ps -q 2> /dev/null) ]]; then
         local DOCKER_TYPE="docker-machine"
         echo $DOCKER_TYPE
     elif [[ $(which docker-machine) && -d "/Applications/VirtualBox.app" ]]; then
