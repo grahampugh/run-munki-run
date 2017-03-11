@@ -6,7 +6,7 @@ echo
 echo "### We need to configure Virtual Box"
 echo
 # Check that Docker Machine exists
-if [[ -z "$(docker-machine ls | grep default)" ]]; then
+if [[ "$(docker-machine ls | grep default)" ]]; then
 	echo
 	echo "### Note that Docker-Machine is a development environment."
 	echo "### Think carefully before using this in Production."
