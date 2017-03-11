@@ -11,8 +11,6 @@ if [[ "$(docker-machine ls | grep default)" ]]; then
 	echo "### Note that Docker-Machine is a development environment."
 	echo "### Think carefully before using this in Production."
 	echo
-	echo "Creating the run_munki_run docker-machine..."
-	echo
 
 	# Check that Docker Machine is running, or that this is the first run so we need to
 	# set up the port forwarding in VirutalBox
@@ -21,10 +19,10 @@ if [[ "$(docker-machine ls | grep default)" ]]; then
     fi
 
     # (Re)assign port-forwarding in the VM
-	VBoxManage modifyvm "default" --natpf1 delete munki-do
-	VBoxManage modifyvm "default" --natpf1 delete munki
-	VBoxManage modifyvm "default" --natpf1 delete mwa2
-	VBoxManage modifyvm "default" --natpf1 delete sal
+	VBoxManage modifyvm "default" --natpf1 delete "munki-do"
+	VBoxManage modifyvm "default" --natpf1 delete "munki"
+	VBoxManage modifyvm "default" --natpf1 delete "mwa2"
+	VBoxManage modifyvm "default" --natpf1 delete "sal"
 	# setup the required port forwarding on the VM
 	VBoxManage modifyvm "default" --natpf1 "munki-do,tcp,,$MUNKI_DO_PORT,,$MUNKI_DO_PORT"
 	VBoxManage modifyvm "default" --natpf1 "munki,tcp,,$MUNKI_PORT,,$MUNKI_PORT"
@@ -35,7 +33,9 @@ if [[ "$(docker-machine ls | grep default)" ]]; then
 	docker-machine restart default
 
     # Get the IP address of the machine
-    IP=$(docker-machine ip default)
+    VM_IP=$(docker-machine ip default)
+    echo "Your Docker-Machine IP address is: $VM_IP"
+    echo
 else
     echo
     echo "--- ACTION REQUIRED ---"

@@ -112,7 +112,8 @@ TIME_ZONE='Europe/Zurich'
 # logger
 LOGGER="/usr/bin/logger -t Run-Munki-Run"
 
-# IP address - you'll need to change to en0 for wired, en1 if you're running on wifi.
+# IP address
+# If your Mac has more than one interface, you'll need to change to en0 for wired, en1 if you're running on wifi.
 IP=$(ipconfig getifaddr en0)
 
 # Proxy Servers - add these if you need to for curl
