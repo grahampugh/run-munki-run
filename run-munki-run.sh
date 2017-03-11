@@ -27,7 +27,6 @@ dockerType() {
         echo "Then re-run ./run-munki-run.sh"
         echo "---"
         echo
-        exit 1
         # Check if this is a Mac
     elif [[ -d "/Applications/Safari.app" ]]; then
         echo
@@ -37,14 +36,12 @@ dockerType() {
         echo "or the Docker Toolbox (older Macs)"
         echo "---"
         echo
-        exit 1
     else
         echo
         echo "--- CANNOT CONTINUE ---"
         echo "This doesn't appear to be a Mac! Linux support may come in the future. Windows, no."
         echo "---"
         echo
-        exit 1
     fi
 }
 
@@ -76,6 +73,11 @@ createDatabaseFolder() {
 
 # Run additional setup steps if using Docker Toolbox
 DOCKER_TYPE=$(dockerType)
+# Quit if docker not ready
+if [[ -z $DOCKER_TYPE ]]; then
+    exit 1
+fi
+
 echo
 echo "Docker type: $DOCKER_TYPE"
 echo
