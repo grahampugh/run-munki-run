@@ -10,9 +10,11 @@
 dockerType() {
     # What type of Docker do we have?
     if [[ -d "/Applications/Docker.app" && $(which docker) ]]; then
-        DOCKER_TYPE="native"
+        local DOCKER_TYPE="native"
+        echo $DOCKER_TYPE
     elif [[ $(which docker-machine) && -d "/Applications/VirtualBox.app" && $(which docker) ]]; then
-        DOCKER_TYPE="docker-machine"
+        local DOCKER_TYPE="docker-machine"
+        echo $DOCKER_TYPE
     elif [[ $(which docker-machine) && -d "/Applications/VirtualBox.app" ]]; then
         echo
         echo "--- ACTION REQUIRED ---"
@@ -44,7 +46,6 @@ dockerType() {
         echo
         exit 0
     fi
-    return $DOCKER_TYPE
 }
 
 dockerCleanUp() {
@@ -74,7 +75,10 @@ createDatabaseFolder() {
 . settings.sh
 
 # Run additional setup steps if using Docker Toolbox
-DOCKER_TYPE=dockerType
+DOCKER_TYPE=$(dockerType)
+echo
+echo "Docker type: $DOCKER_TYPE"
+echo
 if [[ $DOCKER_TYPE == "docker-machine" ]]; then
     . docker-machine.sh
 fi
