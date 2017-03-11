@@ -115,6 +115,10 @@ LOGGER="/usr/bin/logger -t Run-Munki-Run"
 # IP address
 # If your Mac has more than one interface, you'll need to change to en0 for wired, en1 if you're running on wifi.
 IP=$(ipconfig getifaddr en0)
+if [[ -z "$IP" ]]; then
+    # Let's try en1 just in case it helps
+    IP=$(ipconfig getifaddr en1)
+fi
 
 # Proxy Servers - add these if you need to for curl
 #HTTP_PROXY=http://proxy.my.company:2010/
