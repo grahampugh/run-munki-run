@@ -3,6 +3,9 @@
 # On older Macs Docker cannot run natively and the Docker Toolbox is required, which
 # uses VirtualBox and boot2docker
 
+# import the settings
+. settings.sh
+
 # Check if the Munki server  website is up - if so, no need to restart it
 curl -s -o "/dev/null" "http://${IP}/${REPONAME}/catalogs/all"
 if [ $? -ne 0 ] ; then
