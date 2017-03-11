@@ -6,45 +6,6 @@
 
 # Functions
 
-# Check the type of Docker running, or what can be done to set it up
-dockerType() {
-    # What type of Docker do we have?
-    if [[ -d "/Applications/Docker.app" && $(which docker) ]]; then
-        local DOCKER_TYPE="native"
-        echo $DOCKER_TYPE
-    elif [[ $(which docker-machine) && -d "/Applications/VirtualBox.app" && $(docker ps -q 2> /dev/null) ]]; then
-        local DOCKER_TYPE="docker-machine"
-        echo $DOCKER_TYPE
-    elif [[ $(which docker-machine) && -d "/Applications/VirtualBox.app" ]]; then
-        echo
-        echo "--- ACTION REQUIRED ---"
-        echo "Docker Toolbox is installed, but you need to set up the shell environment to run docker commands"
-        echo "Please run the following commands:"
-        echo
-        echo "docker-machine env default"
-        echo "eval $(docker-machine env default)"
-        echo
-        echo "Then re-run ./run-munki-run.sh"
-        echo "---"
-        echo
-        # Check if this is a Mac
-    elif [[ -d "/Applications/Safari.app" ]]; then
-        echo
-        echo "--- ACTION REQUIRED ---"
-        echo "You do not appear to have Docker installed."
-        echo "Go to Docker.com and get the native Docker for Mac (new Macs since 2010)"
-        echo "or the Docker Toolbox (older Macs)"
-        echo "---"
-        echo
-    else
-        echo
-        echo "--- CANNOT CONTINUE ---"
-        echo "This doesn't appear to be a Mac! Linux support may come in the future. Windows, no."
-        echo "---"
-        echo
-    fi
-}
-
 dockerCleanUp() {
     # This checks whether munki munki-do etc are running and stops them if so
     # (thanks to Pepijn Bruienne):
@@ -71,11 +32,42 @@ createDatabaseFolder() {
 # import the settings
 . settings.sh
 
+# What type of Docker do we have?
 # Run additional setup steps if using Docker Toolbox
-DOCKER_TYPE=$(dockerType)
-# Quit if docker not ready
-if [[ -z $DOCKER_TYPE ]]; then
-    exit 1
+if [[ -d "/Applications/Docker.app" && $(which docker) ]]; then
+    DOCKER_TYPE="native"
+elif [[ $(which docker-machine) && -d "/Applications/VirtualBox.app" && $(docker ps -q 2> /dev/null) ]]; then
+    DOCKER_TYPE="docker-machine"
+elif [[ $(which docker-machine) && -d "/Applications/VirtualBox.app" ]]; then
+    echo
+    echo "--- ACTION REQUIRED ---"
+    echo "Docker Toolbox is installed, but you need to set up the shell environment to run docker commands"
+    echo "Please run the following commands:"
+    echo
+    echo "docker-machine env default"
+    echo "eval $(docker-machine env default)"
+    echo
+    echo "Then re-run ./run-munki-run.sh"
+    echo "---"
+    echo
+    exit 0
+    # Check if this is a Mac
+elif [[ -d "/Applications/Safari.app" ]]; then
+    echo
+    echo "--- ACTION REQUIRED ---"
+    echo "You do not appear to have Docker installed."
+    echo "Go to Docker.com and get the native Docker for Mac (new Macs since 2010)"
+    echo "or the Docker Toolbox (older Macs)"
+    echo "---"
+    echo
+    exit 0
+else
+    echo
+    echo "--- CANNOT CONTINUE ---"
+    echo "This doesn't appear to be a Mac! Linux support may come in the future. Windows, no."
+    echo "---"
+    echo
+    exit 0
 fi
 
 echo
