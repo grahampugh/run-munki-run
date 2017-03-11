@@ -1,6 +1,52 @@
 #!/bin/bash
 
+# run-munki-run.sh
+# This script can be run independently of RUN-ME-FIRST.sh to restart the docker services on
+# a system that has already been setup using RUN-ME-FIRST.sh.
+
 # Functions
+
+# Check the type of Docker running, or what can be done to set it up
+dockerType() {
+    # What type of Docker do we have?
+    if [[ -d "/Applications/Docker.app" && $(which docker) ]]; then
+        DOCKER_TYPE="native"
+    elif [[ $(which docker-machine) && -d "/Applications/VirtualBox.app" && $(which docker) ]]; then
+        DOCKER_TYPE="docker-machine"
+    elif [[ $(which docker-machine) && -d "/Applications/VirtualBox.app" ]]; then
+        echo
+        echo "--- ACTION REQUIRED ---"
+        echo "Docker Toolbox is installed, but you need to set up the shell environment to run docker commands"
+        echo "Please run the following commands:"
+        echo
+        echo "docker-machine env default"
+        echo "eval $(docker-machine env default)"
+        echo
+        echo "Then re-run ./run-munki-run.sh"
+        echo "---"
+        echo
+        exit 0
+        # Check if this is a Mac
+    elif [[ -d "/Applications/Safari.app" ]]; then
+        echo
+        echo "--- ACTION REQUIRED ---"
+        echo "You do not appear to have Docker installed."
+        echo "Go to Docker.com and get the native Docker for Mac (new Macs since 2010)"
+        echo "or the Docker Toolbox (older Macs)"
+        echo "---"
+        echo
+        exit 0
+    else
+        echo
+        echo "--- CANNOT CONTINUE ---"
+        echo "This doesn't appear to be a Mac! Linux support may come in the future. Windows, no."
+        echo "---"
+        echo
+        exit 0
+    fi
+    return $DOCKER_TYPE
+}
+
 dockerCleanUp() {
     # This checks whether munki munki-do etc are running and stops them if so
     # (thanks to Pepijn Bruienne):
@@ -27,9 +73,15 @@ createDatabaseFolder() {
 # import the settings
 . settings.sh
 
+# Run additional setup steps if using Docker Toolbox
+DOCKER_TYPE=dockerType
+if [[ $DOCKER_TYPE == "docker-machine" ]]; then
+    . docker-machine.sh
+fi
+
 # double-check that the Munki repo exists
 if [ ! -d "$MUNKI_REPO" ]; then
-    echo "### Munki Repo not set up. Please run munkiinabox.sh before running this script"
+    echo "### Munki Repo not set up. Please run RUN-ME-FIRST.sh before running this script"
     echo "### Exiting..."
     echo
     exit 0
@@ -40,16 +92,15 @@ fi
 # Stop any running docker containers
 dockerCleanUp
 
-echo "### checking for Sal database folder"
-echo
+# Check for sal-db folder
 createDatabaseFolder "$SAL_DB"
 
-# ensure there's a folder ready for the MWA2 DB:
+# Check for mwa2-db folder
 if [[ $MWA2_ENABLED = true ]]; then
     createDatabaseFolder "$MWA2_DB"
 fi
 
-# ensuring the Munki-Do DB folder exists with the correct permissions
+# Check for munki-do-db folder
 if [[ $MUNKI_DO_ENABLED = true ]]; then
     createDatabaseFolder "$MUNKI_DO_DB"
 fi
