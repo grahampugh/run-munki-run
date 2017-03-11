@@ -375,7 +375,7 @@ if [[ ! -f "${AUTOPKG_RECIPE_LIST}" ]]; then
     echo "${AUTOPKGRUN}" >> "${AUTOPKG_RECIPE_LIST}"
 fi
 
-# Run the AutoPkg recipe list 
+# Run the AutoPkg recipe list
 ${AUTOPKG} run --recipe-list="${AUTOPKG_RECIPE_LIST}"
 
 ${LOGGER} "AutoPkg has Run"
@@ -387,9 +387,7 @@ echo
 munkiCreateManifests site_default $MUNKI_DEFAULT_SOFTWARE_MANIFEST
 
 # Test whether there are already catalogs in the site_default manifest
-defaultManifestContent="$(${MANU} display-manifest site_default)"
-line_after_catalogs=$(echo $defaultManifestContent | grep -A1 Catalogs: | grep -v Catalogs:)
-if [[ "$(echo $line_after_catalogs | grep :)" ]]; then
+if [[ $(echo "$(${MANU} display-manifest site_default)" | grep -A1 catalogs: | grep -v catalogs: | grep :) ]]; then
     # no catalogs found, let's add them
     # the order is important! The second item takes priority
     ${MANU} add-catalog production --manifest site_default
