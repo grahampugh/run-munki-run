@@ -38,10 +38,11 @@ if [[ -d "/Applications/Docker.app" && $(which docker) ]]; then
     DOCKER_TYPE="native"
 elif [[ $(which docker-machine) && -d "/Applications/VirtualBox.app" && $(docker ps -q 2> /dev/null) ]]; then
     DOCKER_TYPE="docker-machine"
-elif [[ $(which docker-machine) && -d "/Applications/VirtualBox.app" ]]; then
+# Docker-machine is running but env is wrong
+elif [[ $(which docker-machine) && -d "/Applications/VirtualBox.app" && $(docker-machine ls | grep default | grep Running) ]]; then
     echo
     echo "--- ACTION REQUIRED ---"
-    echo "Docker Toolbox is installed, but you need to set up the shell environment to run docker commands"
+    echo "Docker Toolbox is installed and running, but you need to set up the shell environment to run docker commands"
     echo "Please run the following commands:"
     echo
     echo "docker-machine env default"
@@ -51,7 +52,20 @@ elif [[ $(which docker-machine) && -d "/Applications/VirtualBox.app" ]]; then
     echo "---"
     echo
     exit 0
-    # Check if this is a Mac
+# docker-machine is stopped
+elif [[ $(which docker-machine) && -d "/Applications/VirtualBox.app" && $(docker-machine ls | grep default | grep Stopped) ]]; then
+    echo
+    echo "--- ACTION REQUIRED ---"
+    echo "Docker Toolbox is installed but has stopped."
+    echo "Please run the following command:"
+    echo
+    echo "docker-machine restart default"
+    echo
+    echo "Then re-run ./run-munki-run.sh"
+    echo "---"
+    echo
+    exit 0
+# Check if this is a Mac
 elif [[ -d "/Applications/Safari.app" ]]; then
     echo
     echo "--- ACTION REQUIRED ---"
