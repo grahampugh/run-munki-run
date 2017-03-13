@@ -162,7 +162,6 @@ addHTTPBasicAuth() {
     # Adds basic HTTP authentication based on the password set in settings.py
     # Inputs: 1. $MUNKI_REPO
     # Output: $HTPASSWD
-    sudo rm "$1/.htaccess" "$1/.htpasswd"
     /bin/cat > "$1/.htaccess" <<HTPASSWDDONE
 AuthType Basic
 AuthName "Munki Repository"
