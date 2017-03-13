@@ -155,7 +155,7 @@ if [[ $MUNKI_ENABLED == true ]]; then
     docker run -d \
         -e HTPASSWD="$HTPASSWD_CONTENT" \
         -e FORWARD_PORT=$MUNKI_PORT \
-        --link web:web -p $MUNKI_PORT:80 \
+        --link munki:web -p $MUNKI_PORT:80 \
         --name auth \
         beevelop/nginx-basic-auth
 fi
