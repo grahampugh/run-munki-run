@@ -27,6 +27,7 @@ dockerCleanUp() {
 }
 
 createDatabaseFolder() {
+    echo
     echo "### checking for $1 database folder"
     echo
     # ensure there's a folder ready for the $1 database:
@@ -150,6 +151,7 @@ if [[ $MUNKI_ENABLED == true ]]; then
     # Nginx middleware container for HTTP basic authentication
     # See https://github.com/beevelop/docker-nginx-basic-auth
     HTPASSWD_CONTENT=$(sudo head -n 1 $MUNKI_REPO/.htpasswd)
+    echo $HTPASSWD_CONTENT
     docker run -d \
         -e HTPASSWD="$HTPASSWD_CONTENT" \
         -e FORWARD_PORT=$MUNKI_PORT \
