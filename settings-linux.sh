@@ -13,63 +13,11 @@ DBLOC="$HOME/munki-databases"
 MUNKILOC="/usr/local/munki"
 GIT="/usr/bin/git"
 MANU="/usr/local/munki/manifestutil"
-DEFAULTS="/usr/bin/defaults"
-AUTOPKG="/usr/local/bin/autopkg"
-
-# Preferred text editor
-TEXTEDITOR="TextWrangler.app"
-
-# OS version check
-osvers=$(sw_vers -productVersion | awk -F. '{print $2}') # Thanks Rich Trouton
 
 # Some other directories
-MAINPREFSDIR="/Library/Preferences"
 SCRIPTDIR="/usr/local/bin"
-AUTOPKG_RECIPE_LIST="$HOME/Library/AutoPkg/recipe-list.txt"
 
-# AutoPkg repos
-read -r -d '' AUTOPKGREPOS <<ENDMSG
-recipes
-grahamgilbert-recipes
-hjuutilainen-recipes
-homebysix-recipes
-jleggat-recipes
-keeleysam-recipes
-killahquam-recipes
-scriptingosx-recipes
-valdore86-recipes
-grahampugh/recipes
-ENDMSG
-
-# Autopkg selections
-read -r -d '' AUTOPKGRUN <<ENDMSG
-AdobeFlashPlayer.munki.recipe
-AdobeReader.munki.recipe
-AdobeReaderUpdates.munki.recipe
-Atom.munki.recipe
-Firefox.munki.recipe
-GoogleChrome.munki.recipe
-osquery.munki.recipe
-Sal-osquery.munki.recipe
-Sal.munki.recipe
-Slack.munki.recipe
-munkitools2.munki.recipe
-MakeCatalogs.munki.recipe
-ENDMSG
-
-# Others
-# BBEdit.munki.recipe
-# KeePassX.munki.recipe
-# Recipe Robot.munki.recipe
-# Smultron8.munki.recipe
-# SublimeText3.munki.recipe
-# Textmate.munki.recipe
-# VisualStudioCode.munki.recipe
-
-# AutoPkgr stuff
-AUTOPKG_RECIPE_LIST_LOC="$HOME/Library/AutoPkg/RecipeList"
-
-## Docker variables
+# Docker variables
 
 # Munki container variables:
 # Set the public port on which you wish to access Munki
@@ -116,13 +64,6 @@ TIME_ZONE='Europe/Zurich'
 LOGGER="/usr/bin/logger -t Run-Munki-Run"
 
 # IP address
-# If your Mac has more than one interface, you'll need to change to en0 for wired, en1 if you're running on wifi.
-IP=$(ipconfig getifaddr en0)
-if [[ -z "$IP" ]]; then
-    # Let's try en1 just in case it helps
-    IP=$(ipconfig getifaddr en1)
-fi
+# If your PC has more than one interface, you'll need to change to eth1 to the appropirate interface.
+IP=$(ip addr show dev eth1 | grep "inet " | awk '{ print $2 }')
 
-# Proxy Servers - add these if you need to for curl
-#HTTP_PROXY=http://proxy.my.company:2010/
-#HTTPS_PROXY=$HTTP_PROXY
