@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Munki Repo location. This should be in /Users somewhere (not tested lately)
-REPOLOC="$HOME"
+REPOLOC="/media/psf"
 REPONAME="repo"
 MUNKI_REPO="${REPOLOC}/${REPONAME}"
 MUNKI_DEFAULT_SOFTWARE_MANIFEST="core_software"
@@ -65,5 +65,5 @@ LOGGER="/usr/bin/logger -t Run-Munki-Run"
 
 # IP address
 # If your PC has more than one interface, you'll need to change to eth1 to the appropirate interface.
-IP=$(ip addr show dev eth1 | grep "inet " | awk '{ print $2 }')
+IP=$(ip addr show dev eth1 | grep "inet " | awk '{ print $2 }' | sed -e 's/\/.*//g')
 
