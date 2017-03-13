@@ -175,7 +175,7 @@ HTPASSWDDONE
 
     sudo chmod 640 "$1/.htaccess" "$1/.htpasswd"
     sudo chown _www:wheel "$1/.htaccess" "$1/.htpasswd"
-    echo $HTPASSWD
+    echo $HTPASSAUTH
     }
 
 createMunkiClientInstaller() {
@@ -380,8 +380,8 @@ ${LOGGER} "All Tests Passed! On to the configuration."
 createMunkiRepo "${MUNKI_REPO}"
 
 # Create a client installer pkg pointing to this repo. Thanks Nick!
-HTPASSWD=$(addHTTPBasicAuth "$MUNKI_REPO")
-createMunkiClientInstaller "${IP}" "${MUNKI_PORT}" "${REPONAME}" "${MUNKI_REPO}" "installers" "${HTPASSWD}"
+HTPASSAUTH=$(addHTTPBasicAuth "$MUNKI_REPO")
+createMunkiClientInstaller "${IP}" "${MUNKI_PORT}" "${REPONAME}" "${MUNKI_REPO}" "installers" "${HTPASSAUTH}"
 
 # Configure MunkiTools on this computer
 ${DEFAULTS} write com.googlecode.munki.munkiimport editor "${TEXTEDITOR}"
