@@ -1,23 +1,43 @@
 # run-munki-run
 
-This is a simple Munki + MunkiWebAdmin2 + Munki-Do + Sal installation using [Docker].
-(You can choose whether you want MWA2 and/or Munki-Do in the settings).
-It also installs MunkiTools and AutoPkg on your machine
-and populates your repo with a few packages from AutoPkg.
-Finally, it creates a preconfigured Client Installer you can distribute to clients.
+This set of scripts is intended to make setting up a Munki service easy.
+It is similar to Tom Bridge's [Munki-In-A-Box], and uses parts of that script,
+but does not rely on an existing web service such as the Mac Server.app.
+
+## What does it do?
+
+   * Downloads and installs the Munki tools on your Mac
+   * Downloads and installs AutoPkg on your Mac
+   * Creates a Munki repository in a location of your choice
+   * Builds a preconfigured Munki Client Installer that you can distribute to clients
+   * Adds AutoPkg repositories, makes Recipe Overrides and runs the recipes to
+     populate your Munki repository
+   * Creates a Docker container that serves the Munki repository
+   * Creates a Docker container that serves the Sal reporting service
+   * Creates a Docker container that serves MunkiWebAdmin2
+   * Creates a Docker container that serves Munki-Do
+   * Contains a script to generate a Sal client setup package
+
+Many of these features can be disabled, for instance if you don't want to build Munki-Do and MunkiWebAdmin2,
+just disable one of them in the settings.
+
+## Anything else?
+
+Yes! You can now (experimentally) run this script on Ubuntu. See Linux Support below for details.
 
 ---
 
-# Prerequisites
+# Prerequisites for Mac installation
 1. [Docker for Mac][Docker] should be installed. *
 2. Mac must be a 2010 or newer model, with Intel’s hardware support for memory
    management unit (MMU) virtualization; i.e., Extended Page Tables (EPT) *
 3. OS X 10.10.3 Yosemite or newer
 4. At least 4GB of RAM
 
-**Note:** Run-Munki-Run also works experimentally on older Macs. On these Macs you
+**Note:**
+Run-Munki-Run also works experimentally on older Macs. On these Macs you
 should install [Docker Toolbox] and run
-`/Applications/Docker/QuickStart Terminal.app` to set up the `default` Docker Container.
+`/Applications/Docker/QuickStart Terminal.app` to set up the `default` Docker machine.
 
 ---
 
@@ -108,11 +128,14 @@ Possible scenarios for this include:
    * You are using the Mac Server.app to serve the Munki repo.
    * You are setting the Munki repo up on a shared folder that is hosted on another computer, such as a Linux VM (see Linux Support above).
 
+---
 
 # Acknowledgements
 
    * The RUN-ME-FIRST script borrows heavily from
-     [Tom Bridge's excellent Munki-In-A-Box](https://github.com/tbridge/munki-in-a-box).
+     [Tom Bridge's excellent Munki-In-A-Box][Munki-In-A-Box]. Thanks Tom!
 
+
+[Munki-In-A-Box]: https://github.com/tbridge/munki-in-a-box
 [Docker]: https://github.com/tbridge/munki-in-a-box
 [Docker Toolbox]: https://www.docker.com/products/docker-toolbox
