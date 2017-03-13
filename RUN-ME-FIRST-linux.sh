@@ -67,10 +67,6 @@ MUNKILOC="/usr/local/munki"
 GIT="/usr/bin/git"
 MANU="/usr/local/munki/manifestutil"
 
-# IP address
-# If your PC has more than one interface, you'll need to change to eth1 to the appropirate interface.
-IP=$(ip addr show dev eth1 | grep "inet " | awk '{ print $2 }' | sed -e 's/\/.*//g')
-
 # Establish our Basic Variables:
 . settings-linux.sh
 

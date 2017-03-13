@@ -314,18 +314,6 @@ AUTOPKG="/usr/local/bin/autopkg"
 # OS version check
 osvers=$(sw_vers -productVersion | awk -F. '{print $2}') # Thanks Rich Trouton
 
-# IP address/host name
-# If your Mac has more than one interface, you'll need to change to en0 for wired, en1 if you're running on wifi.
-IP=$(ipconfig getifaddr en0)
-# Well, let's try en1 if en0 is empty
-if [[ -z "$IP" ]]; then
-    IP=$(ipconfig getifaddr en1)
-fi
-# Override this for setups where the Munki host is remote
-if [[ "$MUNKI_HOST" ]]; then
-    IP=$MUNKI_HOST
-fi
-
 # logger
 LOGGER="/usr/bin/logger -t Run-Munki-Run"
 

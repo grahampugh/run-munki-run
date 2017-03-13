@@ -57,6 +57,18 @@ ENDMSG
 cp ./recipe-list.txt $AUTOPKG_RECIPE_LIST
 
 
+# IP address/host name
+# If your Mac has more than one interface, you'll need to change to en0 for wired, en1 if you're running on wifi.
+IP=$(ipconfig getifaddr en0)
+# Well, let's try en1 if en0 is empty
+if [[ -z "$IP" ]]; then
+    IP=$(ipconfig getifaddr en1)
+fi
+# Override this for setups where the Munki host is remote
+if [[ "$MUNKI_HOST" ]]; then
+    IP=$MUNKI_HOST
+fi
+
 
 ### Docker variables for run-munki-run.sh
 
