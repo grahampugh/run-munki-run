@@ -31,8 +31,10 @@ createDatabaseFolder() {
 
 # import the settings
 if [[ $1 == "linux" ]]; then
+    echo "### Importing Linux setup..."
     . settings-linux.sh
 else
+    echo "### Importing Mac setup..."
     . settings.sh
 fi
 
