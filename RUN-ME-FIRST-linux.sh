@@ -42,7 +42,7 @@ createMunkiRepo() {
 ## Main section
 
 # Establish our Basic Variables:
-. settings.sh
+. settings-linux.sh
 
 # Set proxy if populated
 if [[ -z $HTTP_PROXY ]]; then

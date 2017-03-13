@@ -92,7 +92,7 @@ else
 fi
 
 echo
-echo "Docker type: $DOCKER_TYPE"
+echo "### Docker type: $DOCKER_TYPE"
 echo
 if [[ $DOCKER_TYPE == "docker-machine" ]]; then
     . docker-machine.sh
