@@ -121,12 +121,13 @@ To get going on your Linux host:
 
 If you just want to install the Munki tools and Autopkg on your Mac, and create a Munki repo and populate it:
 
-   * Set `NOSERVERSETUP=True` in `settings.sh` and run the `RUN-ME-FIRST.sh` script to setup the Munki repo at `/Users/Shared`.
+   * Set `NOSERVERSETUP=True` in `settings.sh` and run the `RUN-ME-FIRST.sh` script to setup the Munki repo.
 
 Possible scenarios for this include:
 
    * You are using the Mac Server.app to serve the Munki repo.
-   * You are setting the Munki repo up on a shared folder that is hosted on another computer, such as a Linux VM (see Linux Support above).
+   * You are setting the Munki repo up on a shared folder or network location that is hosted on another computer,
+     such as a Linux VM (see Linux Support above).
 
 ---
 
