@@ -23,63 +23,6 @@ rootCheck() {
     fi
 }
 
-downloadMunki() {
-    MUNKI_LATEST=$(curl https://api.github.com/repos/munki/munki/releases/latest | python -c 'import json,sys;obj=json.load(sys.stdin);print obj["assets"][0]["browser_download_url"]')
-
-    mkdir -p "$1"
-    curl -L "${MUNKI_LATEST}" -o "$1/munki-latest.pkg"
-}
-
-installMunki() {
-    # Write a Choices XML file for the Munki package. Thanks Rich and Greg!
-
-    /bin/cat > "/tmp/com.github.grahampugh.run-munki-run.munkiinstall.xml" << 'MUNKICHOICESDONE'
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-    <array>
-        <dict>
-                <key>attributeSetting</key>
-                <integer>1</integer>
-                <key>choiceAttribute</key>
-                <string>selected</string>
-                <key>choiceIdentifier</key>
-                <string>core</string>
-        </dict>
-        <dict>
-                <key>attributeSetting</key>
-                <integer>1</integer>
-                <key>choiceAttribute</key>
-                <string>selected</string>
-                <key>choiceIdentifier</key>
-                <string>admin</string>
-        </dict>
-        <dict>
-                <key>attributeSetting</key>
-                <integer>0</integer>
-                <key>choiceAttribute</key>
-                <string>selected</string>
-                <key>choiceIdentifier</key>
-                <string>app</string>
-        </dict>
-        <dict>
-                <key>attributeSetting</key>
-                <integer>0</integer>
-                <key>choiceAttribute</key>
-                <string>selected</string>
-                <key>choiceIdentifier</key>
-                <string>launchd</string>
-        </dict>
-    </array>
-</plist>
-MUNKICHOICESDONE
-
-    sudo /usr/sbin/installer -dumplog -verbose -applyChoiceChangesXML "/tmp/com.github.grahampugh.run-munki-run.munkiinstall.xml" -pkg "$1/munki-latest.pkg" -target "/"
-
-    ${LOGGER} "Installed Munki Admin and Munki Core packages"
-    echo "### Installed Munki packages"
-    echo
-}
-
 createMunkiRepo() {
     munkiFolderList=( "catalogs" "manifests" "pkgs" "pkgsinfo" "icons" )
     for i in ${munkiFolderList[@]}; do
@@ -92,17 +35,6 @@ createMunkiRepo() {
     chmod -R a+rX,g+w "$1" ## Thanks Arek!
     chown -R ${USER}:admin "$1" ## Thanks Arek!
     ${LOGGER} "### Repo permissions set"
-}
-
-# Munki MakeCatalogs command
-munkiMakeCatalogs() {
-    echo
-    echo "### Running makecatalogs..."
-    echo
-    /usr/local/munki/makecatalogs
-    echo
-    echo "### ...done"
-    echo
 }
 
 
@@ -150,51 +82,12 @@ versionCheck 10
 # Check that the script is NOT running as root
 rootCheck
 
-# Let's get the latest Munki Installer
-downloadMunki "${MUNKI_REPO}/installers"
-
-# Install Munki if it isn't already there
-if [[ ! -f $MUNKILOC/munkiimport ]]; then
-    ${LOGGER} "Grabbing and Installing the Munki Tools Because They Aren't Present"
-    installMunki "${MUNKI_REPO}/installers"
-else
-    ${LOGGER} "Munki was already installed, I think, so I'm moving on"
-    echo "### Munkitools were already installed"
-    echo
-fi
-
-# Check for Command line tools.
-if [[ ! -f "/usr/bin/git" ]]; then
-    installCommandLineTools
-fi
-
 echo "### Great. All Tests are passed, so let's create the Munki Repo"'!'
 echo
 ${LOGGER} "All Tests Passed! On to the configuration."
 
-
 # Create the repo
 createMunkiRepo "${MUNKI_REPO}"
-
-# Test whether there are already catalogs in the site_default manifest
-if [[ $(echo "$(${MANU} display-manifest site_default)" | grep -A1 catalogs: | grep -v catalogs: | grep :) ]]; then
-    # no catalogs found, let's add them
-    # the order is important! The second item takes priority
-    ${MANU} add-catalog production --manifest site_default
-    ${MANU} add-catalog testing --manifest site_default
-    echo "### testing and production catalogs added to site_default"
-else
-    echo "### Catalogs already present in site_default. Moving on..."
-fi
-echo
-
-# Add the core_software manifest as an included manifest (nothing happens if if already added)
-${MANU} add-included-manifest "$MUNKI_DEFAULT_SOFTWARE_MANIFEST" --manifest site_default
-echo "### $MUNKI_DEFAULT_SOFTWARE_MANIFEST manifest added to as an included manifest to Site_Default"
-echo
-
-# Let's makecatalogs just in case
-munkiMakeCatalogs
 
 ${LOGGER} "All done."
 
