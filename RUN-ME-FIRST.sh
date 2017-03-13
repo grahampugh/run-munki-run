@@ -27,8 +27,10 @@
 # -------------------------------------------------------------------------------------- #
 ## Functions
 
-# Check that we are meeting the minimum version
 versionCheck() {
+    # Check that we are meeting the minimum version
+    # Inputs: 1. $osvers
+
     ${LOGGER} "Starting checks..."
 
     if [[ $osvers -lt $1 ]]; then
@@ -41,8 +43,8 @@ versionCheck() {
     fi
 }
 
-# Check that the script is NOT running as root
 rootCheck() {
+    # Check that the script is NOT running as root
     if [[ $EUID -eq 0 ]]; then
         echo "### This script is NOT MEANT to run as root. This script is meant to be run as an admin user. I'm going to quit now. Run me without the sudo, please."
         echo
@@ -51,6 +53,9 @@ rootCheck() {
 }
 
 downloadMunki() {
+    # Download Munki from github
+    # Inputs: 1. $MUNKI_REPO
+
     MUNKI_LATEST=$(curl https://api.github.com/repos/munki/munki/releases/latest | python -c 'import json,sys;obj=json.load(sys.stdin);print obj["assets"][0]["browser_download_url"]')
 
     mkdir -p "$1"
@@ -58,9 +63,11 @@ downloadMunki() {
 }
 
 installMunki() {
-    # Write a Choices XML file for the Munki package. Thanks Rich and Greg!
+    # Install Munki tools on the host Mac
+    # Inputs: 1. $MUNKI_REPO
 
-    /bin/cat > "/tmp/com.github.grahampugh.run-munki-run.munkiinstall.xml" << 'MUNKICHOICESDONE'
+    # Write a Choices XML file for the Munki package. Thanks Rich and Greg!
+    /bin/cat > "/tmp/com.github.grahampugh.run-munki-run.munkiinstall.xml" <<MUNKICHOICESDONE
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
     <array>
@@ -107,9 +114,9 @@ MUNKICHOICESDONE
     echo
 }
 
-# Installing the Xcode command line tools on 10.10+
-# This section written by Rich Trouton.
 installCommandLineTools() {
+    # Installing the Xcode command line tools on 10.10+
+    # This section written by Rich Trouton.
     echo "### Installing the command line tools..."
     echo
     cmd_line_tools_temp_file="/tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress"
@@ -136,6 +143,8 @@ installCommandLineTools() {
 }
 
 createMunkiRepo() {
+    # Creates the Munki repo folders if they don't already exist
+    # Inputs: 1. $MUNKI_REPO
     munkiFolderList=( "catalogs" "manifests" "pkgs" "pkgsinfo" "icons" )
     for i in ${munkiFolderList[@]}; do
         mkdir -p "$1/$i"
@@ -149,8 +158,35 @@ createMunkiRepo() {
     ${LOGGER} "### Repo permissions set"
 }
 
-# Create a client installer pkg pointing to this repo. Thanks Nick!
+addHTTPBasicAuth() {
+    # Adds basic HTTP authentication based on the password set in settings.py
+    # Inputs: 1. $MUNKI_REPO
+    # Output: $HTPASSWD
+    /bin/cat > "$1/.htaccess" <<HTPASSWDDONE
+AuthType Basic
+AuthName "Munki Repository"
+AuthUserFile $1/.htpasswd
+Require valid-user
+HTPASSWDDONE
+
+    htpasswd -cb $1/.htpasswd munki $HTPASSWD
+    HTPASSAUTH=$(python -c "import base64; print \"Authorization: Basic %s\" % base64.b64encode(\"munki:$HTPASSWD\")")
+    # Thanks to Mike Lynn for the fix
+
+    sudo chmod 640 .htaccess .htpasswd
+    sudo chown _www:wheel .htaccess .htpasswd
+    echo $HTPASSWD
+    }
+
 createMunkiClientInstaller() {
+    # Create a client installer pkg pointing to this repo. Thanks Nick!
+    # Inputs:
+    # 1. $IP
+    # 2. $MUNKI_PORT
+    # 3. $REPONAME
+    # 4. $MUNKI_REPO
+    # 5. installers folder
+    # 6. $HTPASSWD
     if [[ ! -f /usr/bin/pkgbuild ]]; then
         ${LOGGER} "Pkgbuild is not installed."
         echo "### Please install command line tools first. Exiting..."
@@ -161,6 +197,8 @@ createMunkiClientInstaller() {
     # Set the SoftwareRepoURL
     mkdir -p "$4/run-munki-run/ClientInstaller/Library/Preferences/"
     ${DEFAULTS} write "$4/run-munki-run/ClientInstaller/Library/Preferences/ManagedInstalls.plist" SoftwareRepoURL "http://$1:$2/$3"
+    # Add the HTTP Basic Auth key
+    ${DEFAULTS} write /tmp/ClientInstaller/Library/Preferences/ManagedInstalls AdditionalHttpHeaders -array "$6"
 
     # Add the postinstall script that downloads Munki
     mkdir -p "$4/run-munki-run/scripts"
@@ -199,9 +237,10 @@ ENDMSG
     fi
 }
 
-# Get AutoPkg
-# Nod and Toast to Nate Felton!
 installAutoPkg() {
+    # Get AutoPkg
+    # thanks to Nate Felton
+    # Inputs: 1. $MUNKI_REPO
     AUTOPKG_LATEST=$(curl https://api.github.com/repos/autopkg/autopkg/releases | python -c 'import json,sys;obj=json.load(sys.stdin);print obj[0]["assets"][0]["browser_download_url"]')
     /usr/bin/curl -L "${AUTOPKG_LATEST}" -o "$1/autopkg-latest.pkg"
 
@@ -213,8 +252,9 @@ installAutoPkg() {
     echo
 }
 
-# Create Munki manifests
 munkiCreateManifests() {
+    # Create Munki manifests
+    # Inputs: 1-n. list of manifests to create
     for var in "$@"; do
         ${MANU} new-manifest $var
         echo "### $var manifest created"
@@ -222,8 +262,8 @@ munkiCreateManifests() {
     echo
 }
 
-# Munki MakeCatalogs command
 munkiMakeCatalogs() {
+    # Munki MakeCatalogs command
     echo
     echo "### Running makecatalogs..."
     echo
@@ -233,10 +273,10 @@ munkiMakeCatalogs() {
     echo
 }
 
-# Munki add packages to manifest
 munkiAddPackages() {
-    # Code for Array Processing borrowed from First Boot Packager. Thanks Rich!
-    # Changed logic to allow for items with spaces in the names.
+    # Munki: add packages to manifest.
+    # Code adapted from Rich Trouton and Tom Bridge
+    # Inputs: 1. $MUNKI_REPO
     existingCatalogs=($(${MANU} list-catalogs))
     listofpkgs="$(${MANU} list-catalog-items ${existingCatalogs[@]})"
     tLen=$(echo "$listofpkgs" | wc -l)
@@ -263,17 +303,32 @@ munkiAddPackages() {
 # -------------------------------------------------------------------------------------- #
 ## Main section
 
+# Commands
+MUNKILOC="/usr/local/munki"
+GIT="/usr/bin/git"
+MANU="/usr/local/munki/manifestutil"
+DEFAULTS="/usr/bin/defaults"
+AUTOPKG="/usr/local/bin/autopkg"
+
+# OS version check
+osvers=$(sw_vers -productVersion | awk -F. '{print $2}') # Thanks Rich Trouton
+
+# IP address
+# If your Mac has more than one interface, you'll need to change to en0 for wired, en1 if you're running on wifi.
+IP=$(ipconfig getifaddr en0)
+# Well, let's try en1 if en0 is empty
+if [[ -z "$IP" ]]; then
+    IP=$(ipconfig getifaddr en1)
+fi
+
+# logger
+LOGGER="/usr/bin/logger -t Run-Munki-Run"
+
 # Establish our Basic Variables:
 . settings.sh
 
-# Set proxy if populated
-if [[ -z $HTTP_PROXY ]]; then
-    export http_proxy=$HTTP_PROXY
-fi
-if [[ -z $HTTPS_PROXY ]]; then
-    export https_proxy=$HTTPS_PROXY
-fi
-
+# Path to Munki repo
+MUNKI_REPO="${REPOLOC}/${REPONAME}"
 
 echo
 echo "### Welcome to Run-Munki-Run, a reworking of Tom Bridge's awesome Munki-In-A-Box."
@@ -331,7 +386,8 @@ ${LOGGER} "All Tests Passed! On to the configuration."
 createMunkiRepo "${MUNKI_REPO}"
 
 # Create a client installer pkg pointing to this repo. Thanks Nick!
-createMunkiClientInstaller "${IP}" "${MUNKI_PORT}" "${REPONAME}" "${MUNKI_REPO}" "installers"
+HTPASSWD=$(addHTTPBasicAuth)
+createMunkiClientInstaller "${IP}" "${MUNKI_PORT}" "${REPONAME}" "${MUNKI_REPO}" "installers" "${HTPASSWD}"
 
 # Configure MunkiTools on this computer
 ${DEFAULTS} write com.googlecode.munki.munkiimport editor "${TEXTEDITOR}"
@@ -416,6 +472,7 @@ munkiMakeCatalogs
 # Clean Up When Done
 rm "$MUNKI_REPO/autopkg-latest.pkg"
 rm -rf "$MUNKI_REPO/run-munki-run"
+rm /tmp/quickytest
 
 ${LOGGER} "All done."
 

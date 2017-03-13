@@ -14,8 +14,8 @@
 # -------------------------------------------------------------------------------------- #
 ## Functions
 
-# Check that the script is NOT running as root
 rootCheck() {
+    # Check that the script is NOT running as root
     if [[ $EUID -eq 0 ]]; then
         echo "### This script is NOT MEANT to run as root. This script is meant to be run as an admin user. I'm going to quit now. Run me without the sudo, please."
         echo
@@ -24,6 +24,8 @@ rootCheck() {
 }
 
 createMunkiRepo() {
+    # Creates the Munki repo folders if they don't already exist
+    # Inputs: 1. $MUNKI_REPO
     munkiFolderList=( "catalogs" "manifests" "pkgs" "pkgsinfo" "icons" )
     for i in ${munkiFolderList[@]}; do
         mkdir -p "$1/$i"
@@ -33,7 +35,7 @@ createMunkiRepo() {
     echo
 
     chmod -R a+rX,g+w "$1" ## Thanks Arek!
-    chown -R ${USER} "$1" ## Thanks Arek!
+    chown -R ${USER} "$1"
     ${LOGGER} "### Repo permissions set"
 }
 
@@ -41,17 +43,23 @@ createMunkiRepo() {
 # -------------------------------------------------------------------------------------- #
 ## Main section
 
+# Commands
+MUNKILOC="/usr/local/munki"
+GIT="/usr/bin/git"
+MANU="/usr/local/munki/manifestutil"
+
+# IP address
+# If your PC has more than one interface, you'll need to change to eth1 to the appropirate interface.
+IP=$(ip addr show dev eth1 | grep "inet " | awk '{ print $2 }' | sed -e 's/\/.*//g')
+
 # Establish our Basic Variables:
 . settings-linux.sh
 
-# Set proxy if populated
-if [[ -z $HTTP_PROXY ]]; then
-    export http_proxy=$HTTP_PROXY
-fi
-if [[ -z $HTTPS_PROXY ]]; then
-    export https_proxy=$HTTPS_PROXY
-fi
+# Path to Munki repo
+MUNKI_REPO="${REPOLOC}/${REPONAME}"
 
+# logger
+LOGGER="/usr/bin/logger -t Run-Munki-Run"
 
 echo
 echo "### Welcome to Run-Munki-Run, a reworking of Tom Bridge's awesome Munki-In-A-Box."

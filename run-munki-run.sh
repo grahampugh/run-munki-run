@@ -94,44 +94,37 @@ fi
 echo
 echo "### Docker type: $DOCKER_TYPE"
 echo
+
 if [[ $DOCKER_TYPE == "docker-machine" ]]; then
+    # Extra setup steps are required for old Macs running Docker-Toolbox
     . docker-machine.sh
 fi
 
 # double-check that the Munki repo exists
-if [ ! -d "$MUNKI_REPO" ]; then
+if [[ ! -d "$MUNKI_REPO" ]]; then
     echo "### Munki Repo not set up. Please run RUN-ME-FIRST.sh before running this script"
     echo "### Exiting..."
     echo
     exit 0
 fi
 
-# if we got this far then we can install the munki server
+# if we got this far then we can run the munki server container
 
 # Stop any running docker containers
 dockerCleanUp
 
-# Check for sal-db folder
-createDatabaseFolder "$SAL_DB"
-
-# Check for mwa2-db folder
-if [[ $MWA2_ENABLED = true ]]; then
-    createDatabaseFolder "$MWA2_DB"
-fi
-
-# Check for munki-do-db folder
-if [[ $MUNKI_DO_ENABLED = true ]]; then
-    createDatabaseFolder "$MUNKI_DO_DB"
-fi
-
 # Start the Munki server container
 echo "### Munki Server Docker..."
+if [[ $MUNKI_ENABLED == true ]]; then
 docker run -d --restart=always --name="munki" \
     -v $MUNKI_REPO:/munki_repo \
     -p $MUNKI_PORT:80 -h munki groob/docker-munki
+fi
 
-# Optionally start a MunkiWebAdmin2 container
-if [[ $MWA2_ENABLED = true ]]; then
+# Start a MunkiWebAdmin2 container
+if [[ $MWA2_ENABLED == true ]]; then
+    # Check for mwa2-db folder
+    createDatabaseFolder "$MWA2_DB"
     echo
     echo "### MunkiWebAdmin2 Server Docker..."
     # munkiwebadmin2 container
@@ -143,18 +136,24 @@ if [[ $MWA2_ENABLED = true ]]; then
 fi
 
 # Start a Sal container
-echo
-echo "### Sal Server Docker..."
-docker run -d --name="sal" \
-  --restart="always" \
-  -p $SAL_PORT:8000 \
-  -v $SAL_DB:/home/docker/sal/db \
-  -e ADMIN_PASS=pass \
-  -e DOCKER_SAL_TZ="Europe/Zurich" \
-  macadmins/sal
+if [[ $SAL_ENABLED == true ]]; then
+    # Check for sal-db folder
+    createDatabaseFolder "$SAL_DB"
+    echo
+    echo "### Sal Server Docker..."
+    docker run -d --name="sal" \
+      --restart="always" \
+      -p $SAL_PORT:8000 \
+      -v $SAL_DB:/home/docker/sal/db \
+      -e ADMIN_PASS=pass \
+      -e DOCKER_SAL_TZ="Europe/Zurich" \
+      macadmins/sal
+fi
 
-# Optionally start a Munki-Do container
-if [[ $MUNKI_DO_ENABLED = true ]]; then
+# Start a Munki-Do container
+if [[ $MUNKI_DO_ENABLED == true ]]; then
+    # Check for munki-do-db folder
+    createDatabaseFolder "$MUNKI_DO_DB"
     echo
     echo "### Munki-Do Docker..."
     docker run -d --restart=always --name munki-do \
