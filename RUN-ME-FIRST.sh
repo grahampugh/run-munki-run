@@ -173,8 +173,8 @@ HTPASSWDDONE
     HTPASSAUTH=$(python -c "import base64; print \"Authorization: Basic %s\" % base64.b64encode(\"munki:$HTPASSWD\")")
     # Thanks to Mike Lynn for the fix
 
-    sudo chmod 640 .htaccess .htpasswd
-    sudo chown _www:wheel .htaccess .htpasswd
+    sudo chmod 640 $1/.htaccess $1/.htpasswd
+    sudo chown _www:wheel $1/.htaccess $1/.htpasswd
     echo $HTPASSWD
     }
 
