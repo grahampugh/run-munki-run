@@ -195,16 +195,17 @@ createMunkiClientInstaller() {
     fi
 
     # Set the SoftwareRepoURL
-    mkdir -p "$4/run-munki-run/ClientInstaller/Library/Preferences/"
-    ${DEFAULTS} write "$4/run-munki-run/ClientInstaller/Library/Preferences/ManagedInstalls.plist" SoftwareRepoURL "http://$1:$2/$3"
+    mkdir -p "$4/run-munki-run/ClientInstaller/Library/Preferences"
+    ${DEFAULTS} write "$4/run-munki-run/ClientInstaller/Library/Preferences/ManagedInstalls.plist" SoftwareRepoURL "$HTTP_PROTOCOL://$1:$2/$3"
     # Add the HTTP Basic Auth key
-    ${DEFAULTS} write /tmp/ClientInstaller/Library/Preferences/ManagedInstalls AdditionalHttpHeaders -array "$6"
+    mkdir -p "$4/run-munki-run/ClientInstaller/private/var/root/Library/Preferences"
+    ${DEFAULTS} write "$4/run-munki-run/ClientInstaller/private/var/root/Library/Preferences/ManagedInstalls.plist" AdditionalHttpHeaders -array "$6"
 
     # Add the postinstall script that downloads Munki
     mkdir -p "$4/run-munki-run/scripts"
     cat > "$4/run-munki-run/scripts/postinstall" <<ENDMSG
 #!/bin/bash
-curl -L "http://$1:$2/$3/installers/munki-latest.pkg" -o "/tmp/munki-latest.pkg"
+curl -L "$HTTP_PROTOCOL://$1:$2/$3/installers/munki-latest.pkg" -o "/tmp/munki-latest.pkg"
 installer -pkg "/tmp/munki-latest.pkg" -target /
 rm /tmp/munki-latest.pkg
 ENDMSG
@@ -313,12 +314,16 @@ AUTOPKG="/usr/local/bin/autopkg"
 # OS version check
 osvers=$(sw_vers -productVersion | awk -F. '{print $2}') # Thanks Rich Trouton
 
-# IP address
+# IP address/host name
 # If your Mac has more than one interface, you'll need to change to en0 for wired, en1 if you're running on wifi.
 IP=$(ipconfig getifaddr en0)
 # Well, let's try en1 if en0 is empty
 if [[ -z "$IP" ]]; then
     IP=$(ipconfig getifaddr en1)
+fi
+# Override this for setups where the Munki host is remote
+if [[ ${MUNKI_HOST} ]]; then
+    IP=$MUNKI_HOST
 fi
 
 # logger
@@ -346,6 +351,7 @@ if [[ $(cat /tmp/quickytest) == "root" ]]; then
 else
     ${LOGGER} "Privilege Escalation Denied, User Cannot Sudo."
     echo "### You are not an admin user, you need to do this an admin user."
+    echo
     exit 1
 fi
 
@@ -391,14 +397,15 @@ createMunkiClientInstaller "${IP}" "${MUNKI_PORT}" "${REPONAME}" "${MUNKI_REPO}"
 
 # Configure MunkiTools on this computer
 ${DEFAULTS} write com.googlecode.munki.munkiimport editor "${TEXTEDITOR}"
-echo "munkiimport editor set to ${TEXTEDITOR}"
+echo "### munkiimport editor set to ${TEXTEDITOR}"
 ${DEFAULTS} write com.googlecode.munki.munkiimport repo_path "${MUNKI_REPO}"
-echo "${MUNKI_REPO} set"
+echo "### ${MUNKI_REPO} set"
 ${DEFAULTS} write com.googlecode.munki.munkiimport pkginfo_extension ".plist"
-echo "pkginfo_extension set"
+echo "### pkginfo_extension set"
 ${DEFAULTS} write com.googlecode.munki.munkiimport default_catalog "testing"
-echo "default_catalog set"
+echo "### default catalog set to testing"
 plutil -convert xml1 ~/Library/Preferences/com.googlecode.munki.munkiimport.plist
+echo
 
 # Get AutoPkg
 # Nod and Toast to Nate Felton!
@@ -409,7 +416,7 @@ fi
 # Configure AutoPkg for use with Munki and Sal
 if [[ $(${DEFAULTS} read com.github.autopkg MUNKI_REPO) != "${MUNKI_REPO}" ]]; then
     ${DEFAULTS} write com.github.autopkg MUNKI_REPO "${MUNKI_REPO}"
-    echo "${MUNKI_REPO} set in AutoPkg"
+    echo "### ${MUNKI_REPO} set in AutoPkg"
 fi
 
 # Check if there is already an AutoPkg recipe list.

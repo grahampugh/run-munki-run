@@ -18,6 +18,15 @@ REPONAME="repo"
 MUNKI_REPO="${REPOLOC}/${REPONAME}"
 AUTOPKG_RECIPE_LIST="$HOME/Library/AutoPkg/recipe-list.txt"
 
+# HTTP or HTTPS?
+# You can direct to https if you like. You would have to have a valid certificate
+# already on the server. This is most suited to those of you serving the Munki
+# folders via Server.app or a native Nginx/Apache installation.
+# If you're running the Docker-Munki container, then this isn't so easy
+# to automate. I suggest taking a look at: http://aulin.co/2015/Munki-SSL-Docker/
+# and changing the docker run command in run-munki-run.sh.
+HTTP_PROTOCOL="http"
+
 # What do you want to call your Munki software manifest?
 # site_default will be created, and this manifest will be added as an
 # included_manifest
@@ -58,6 +67,10 @@ DBLOC="$HOME/munki-databases"
 # Enabled by default. Set to true if you wish to have a Docker Munki server.
 # Set to false if you are using something else to serve Munki e.g. Server.app
 MUNKI_ENABLED=true
+# If MUNKI_ENABLED=false, and/or NOSERVERSETUP=True, you can set a remote address
+# for the Munki server here, which will override the $IP variable based on this
+# host.
+# MUNKI_HOST=123.34.67.89
 # Set the public port on which you wish to access Munki
 # Note: Docker-Machine with VirtualBox cannot forward ports under 1024
 MUNKI_PORT=8000

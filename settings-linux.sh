@@ -4,17 +4,30 @@
 REPOLOC="/media/psf"
 # Repo folder name
 REPONAME="repo"
-MUNKI_DEFAULT_SOFTWARE_MANIFEST="core_software"
+
+# HTTP or HTTPS?
+# You can direct to https if you like. You would have to have a valid certificate
+# already on the server. This is most suited to those of you serving the Munki
+# folders via Server.app or a native Nginx/Apache installation.
+# If you're running the Docker-Munki container, then this isn't so easy
+# to automate. I suggest taking a look at: http://aulin.co/2015/Munki-SSL-Docker/
+# and changing the docker run command in run-munki-run.sh.
+HTTP_PROTOCOL="http"
 
 # HTTP Basic Authentication password
 HTPASSWD="CHANGE_ME!!!NO_REALLY!!!"
 
-# Databases location. This should be away from shared directories e.g. the web root.
-DBLOC="$HOME/munki-databases"
+# What do you want to call your Munki software manifest?
+# site_default will be created, and this manifest will be added as an
+# included_manifest
+MUNKI_DEFAULT_SOFTWARE_MANIFEST="core_software"
 
 
 
 # Docker variables
+
+# Databases location. This should be away from shared directories e.g. the web root.
+DBLOC="$HOME/munki-databases"
 
 # Munki container variables:
 # Enabled by default. Set to true if you wish to have a Docker Munki server.

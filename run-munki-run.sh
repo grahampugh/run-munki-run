@@ -174,7 +174,7 @@ echo "### All done!"
 echo
 echo "--- SAL SETUP INSTRUCTIONS ---"
 echo
-echo "1. Open Sal at http://$IP:$SAL_PORT"
+echo "1. Open Sal at $HTTP_PROTOCOL://$IP:$SAL_PORT"
 echo "2. Create a business unit named 'Default' and a machine group named 'site_default'."
 echo "3. Choose the 'person' menu at the top right and then choose Settings."
 echo "4. From the sidebar, choose API keys and then choose to make a new one."
@@ -182,7 +182,7 @@ echo "5. Give it a name so you can recognise it - e.g. 'PKG Generator'."
 echo "6. You will then be given a public key and a private key."
 echo "7. Enter the following command in terminal to generate the enroll package:"
 echo
-echo "python sal_package_generator.py --sal_url=http://$IP:$SAL_PORT --public_key=<PUBLIC_KEY> --private_key=<PRIVATE_KEY> --pkg_id=com.salopensource.sal_enroll"
+echo "python sal_package_generator.py --sal_url=$HTTP_PROTOCOL://$IP:$SAL_PORT --public_key=<PUBLIC_KEY> --private_key=<PRIVATE_KEY> --pkg_id=com.salopensource.sal_enroll"
 echo
 echo "8. Enter the following commands to import the package to Munki:"
 echo
@@ -194,19 +194,19 @@ echo "--- END OF SAL SETUP INSTRUCTIONS ---"
 echo
 echo "--- DETAILS ---"
 echo
-echo "Your Munki URL is: http://$IP:$MUNKI_PORT"
-echo "(test your Munki URL with: http://$IP:$MUNKI_PORT/$REPONAME/catalogs/all)"
+echo "Your Munki URL is: $HTTP_PROTOCOL://$IP:$MUNKI_PORT"
+echo "(test your Munki URL with: $HTTP_PROTOCOL://$IP:$MUNKI_PORT/$REPONAME/catalogs/all)"
 if [[ $MWA2_ENABLED = true ]]; then
-    echo "Your MWA2 URL is: http://$IP:$MWA2_PORT"
+    echo "Your MWA2 URL is: $HTTP_PROTOCOL://$IP:$MWA2_PORT"
 fi
 if [[ $MUNKI_DO_ENABLED = true ]]; then
-    echo "Your Munki-Do URL is: http://$IP:$MUNKI_DO_PORT"
+    echo "Your Munki-Do URL is: $HTTP_PROTOCOL://$IP:$MUNKI_DO_PORT"
 fi
-echo "Your Sal URL is: http://$IP:$SAL_PORT"
+echo "Your Sal URL is: $HTTP_PROTOCOL://$IP:$SAL_PORT"
 echo
 echo "Download the Munki Client Installer Pkg on a client from the following URL:"
 echo
-echo "http://$IP:$MUNKI_PORT/$REPONAME/installers/ClientInstaller.pkg"
+echo "$HTTP_PROTOCOL://$IP:$MUNKI_PORT/$REPONAME/installers/ClientInstaller.pkg"
 echo
 echo "To update Autopkg recipes in the future, run the following command:"
 echo

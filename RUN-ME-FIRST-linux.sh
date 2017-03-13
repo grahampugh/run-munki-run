@@ -39,6 +39,25 @@ createMunkiRepo() {
     ${LOGGER} "### Repo permissions set"
 }
 
+addHTTPBasicAuth() {
+    # Adds basic HTTP authentication based on the password set in settings.py
+    # Inputs: 1. $MUNKI_REPO
+    # Output: $HTPASSWD
+    /bin/cat > "$1/.htaccess" <<HTPASSWDDONE
+AuthType Basic
+AuthName "Munki Repository"
+AuthUserFile $1/.htpasswd
+Require valid-user
+HTPASSWDDONE
+
+    htpasswd -cb $1/.htpasswd munki $HTPASSWD
+    HTPASSAUTH=$(python -c "import base64; print \"Authorization: Basic %s\" % base64.b64encode(\"munki:$HTPASSWD\")")
+    # Thanks to Mike Lynn for the fix
+
+    sudo chmod 640 "$1/.htaccess" "$1/.htpasswd"
+    sudo chown _www:wheel "$1/.htaccess" "$1/.htpasswd"
+    echo $HTPASSWD
+}
 
 # -------------------------------------------------------------------------------------- #
 ## Main section
@@ -93,6 +112,16 @@ ${LOGGER} "All Tests Passed! On to the configuration."
 
 # Create the repo
 createMunkiRepo "${MUNKI_REPO}"
+
+# Give information about HTTP Basic Authentication set up
+HTPASSWD=$(addHTTPBasicAuth "$MUNKI_REPO")
+
+echo "### The Linux installer cannot create a Munki installer for you."
+echo "### Therefore you need to manually install Munkitools on a client,"
+echo "### and run the following commands:"
+echo
+echo "sudo defaults write /Library/Preferences/ManagedInstalls.plist SoftwareRepoURL \"$HTTP_PROTOCOL://$IP:$MUNKI_PORT/$REPONAME\""
+echo "sudo defaults write /private/var/root/Library/Preferences/ManagedInstalls.plist AdditionalHttpHeaders -array \"$HTPASSWD\""
 
 ${LOGGER} "All done."
 
