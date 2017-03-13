@@ -1,9 +1,7 @@
 osquery.munki.recipe
 Sal-osquery.munki.recipe
 Sal.munki.recipe
-Slack.munki.recipe
 munkitools2.munki.recipe
-MakeCatalogs.munki.recipe
 # AdobeFlashPlayer.munki.recipe
 # AdobeReader.munki.recipe
 # AdobeReaderUpdates.munki.recipe
@@ -13,7 +11,9 @@ MakeCatalogs.munki.recipe
 # GoogleChrome.munki.recipe
 # KeePassX.munki.recipe
 # Recipe Robot.munki.recipe
+# Slack.munki.recipe
 # Smultron8.munki.recipe
 # SublimeText3.munki.recipe
 # Textmate.munki.recipe
 # VisualStudioCode.munki.recipe
+MakeCatalogs.munki.recipe
