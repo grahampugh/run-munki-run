@@ -322,7 +322,7 @@ if [[ -z "$IP" ]]; then
     IP=$(ipconfig getifaddr en1)
 fi
 # Override this for setups where the Munki host is remote
-if [[ ${MUNKI_HOST} ]]; then
+if [[ "$MUNKI_HOST" ]]; then
     IP=$MUNKI_HOST
 fi
 
