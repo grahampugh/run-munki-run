@@ -97,7 +97,7 @@ SAL_PORT=8001
 
 ## MWA2 settings:
 # Enabled by default. Set to true if you wish to use Munki-Do:
-MWA2_ENABLED=false
+MWA2_ENABLED=true
 # Create a new folder to house the MWA2 Django database and point to it here:
 # If using Docker-Machine, it must be within /Users somewhere:
 MWA2_DB="${DBLOC}/mwa2-db"
