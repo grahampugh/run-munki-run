@@ -33,7 +33,7 @@ createMunkiRepo() {
     echo
 
     chmod -R a+rX,g+w "$1" ## Thanks Arek!
-    chown -R ${USER}:admin "$1" ## Thanks Arek!
+    chown -R ${USER} "$1" ## Thanks Arek!
     ${LOGGER} "### Repo permissions set"
 }
 
@@ -75,9 +75,6 @@ fi
 ${LOGGER} "Starting up..."
 
 ## Checks
-
-# 10.10+ for the Web Root Location.
-versionCheck 10
 
 # Check that the script is NOT running as root
 rootCheck
