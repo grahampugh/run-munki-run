@@ -1,5 +1,17 @@
 #!/bin/bash
 
+### Settings
+
+# These settings determine how your Munki repository and web services will be configured.
+# The defaults are reasonable for a Mac.
+
+# Repo and AutoPkg setup only. Set this value to True if you only want to setup the repository
+# and AutoPkg, but do not want to set up the server services (Munki, Munki-Do/MWA2, Sal).
+# Possible scenarios for this include:
+#  * You are using the Mac Server.app to serve the Munki repo.
+#  * You are setting the Munki repo up on a shared folder that is hosted on another computer, such as a Linux VM.
+#NOSERVERSETUP=True
+
 # Munki Repo location. This should be in /Users somewhere (not tested lately)
 REPOLOC="/Users/Shared"
 REPONAME="repo"
@@ -85,7 +97,7 @@ SAL_PORT=8001
 
 ## MWA2 settings:
 # Enabled by default. Set to true if you wish to use Munki-Do:
-MWA2_ENABLED=false
+MWA2_ENABLED=true
 # Create a new folder to house the MWA2 Django database and point to it here:
 # If using Docker-Machine, it must be within /Users somewhere:
 MWA2_DB="${DBLOC}/mwa2-db"

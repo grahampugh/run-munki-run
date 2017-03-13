@@ -30,11 +30,18 @@ createDatabaseFolder() {
 ## Main section
 
 # import the settings
-. settings.sh
+if [[ $1 == "linux" ]]; then
+    echo "### Importing Linux setup..."
+    . settings-linux.sh
+else
+    echo "### Importing Mac setup..."
+    . settings.sh
+fi
+
 
 # What type of Docker do we have?
 # Run additional setup steps if using Docker Toolbox
-if [[ -d "/Applications/Docker.app" && $(which docker) ]]; then
+if [[ $(which docker) ]]; then
     DOCKER_TYPE="native"
 elif [[ $(which docker-machine) && -d "/Applications/VirtualBox.app" && $(docker ps -q 2> /dev/null) ]]; then
     DOCKER_TYPE="docker-machine"
@@ -85,7 +92,7 @@ else
 fi
 
 echo
-echo "Docker type: $DOCKER_TYPE"
+echo "### Docker type: $DOCKER_TYPE"
 echo
 if [[ $DOCKER_TYPE == "docker-machine" ]]; then
     . docker-machine.sh
