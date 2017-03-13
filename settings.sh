@@ -47,22 +47,24 @@ AdobeFlashPlayer.munki.recipe
 AdobeReader.munki.recipe
 AdobeReaderUpdates.munki.recipe
 Atom.munki.recipe
-BBEdit.munki.recipe
 Firefox.munki.recipe
 GoogleChrome.munki.recipe
-KeePassX.munki.recipe
 osquery.munki.recipe
-Recipe Robot.munki.recipe
 Sal-osquery.munki.recipe
 Sal.munki.recipe
 Slack.munki.recipe
-Smultron8.munki.recipe
-SublimeText3.munki.recipe
-Textmate.munki.recipe
-VisualStudioCode.munki.recipe
 munkitools2.munki.recipe
 MakeCatalogs.munki.recipe
 ENDMSG
+
+# Others
+# BBEdit.munki.recipe
+# KeePassX.munki.recipe
+# Recipe Robot.munki.recipe
+# Smultron8.munki.recipe
+# SublimeText3.munki.recipe
+# Textmate.munki.recipe
+# VisualStudioCode.munki.recipe
 
 # AutoPkgr stuff
 AUTOPKG_RECIPE_LIST_LOC="$HOME/Library/AutoPkg/RecipeList"
