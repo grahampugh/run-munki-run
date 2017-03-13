@@ -6,6 +6,15 @@
 
 # Functions
 
+rootCheck() {
+    # Check that the script is NOT running as root
+    if [[ $EUID -eq 0 ]]; then
+        echo "### This script is NOT MEANT to run as root. This script is meant to be run as an admin user. I'm going to quit now. Run me without the sudo, please."
+        echo
+        exit 4 # Running as root.
+    fi
+}
+
 dockerCleanUp() {
     # This checks whether munki munki-do etc are running and stops them if so
     # (thanks to Pepijn Bruienne):
@@ -29,6 +38,9 @@ createDatabaseFolder() {
 # -------------------------------------------------------------------------------------- #
 ## Main section
 
+# logger
+LOGGER="/usr/bin/logger -t Run-Munki-Run"
+
 # import the settings
 if [[ $1 == "linux" ]]; then
     echo "### Importing Linux setup..."
@@ -38,6 +50,21 @@ else
     . settings.sh
 fi
 
+#Let's see if this works...
+#This isn't bulletproof, but this is a basic test.
+sudo whoami > /tmp/quickytest
+
+if [[ $(cat /tmp/quickytest) == "root" ]]; then
+    ${LOGGER} "Privilege Escalation Allowed, Please Continue."
+else
+    ${LOGGER} "Privilege Escalation Denied, User Cannot Sudo."
+    echo "### You are not an admin user, you need to do this an admin user."
+    echo
+    exit 1
+fi
+
+# Check that the script is NOT running as root
+rootCheck
 
 # What type of Docker do we have?
 # Run additional setup steps if using Docker Toolbox
@@ -116,9 +143,19 @@ dockerCleanUp
 # Start the Munki server container
 echo "### Munki Server Docker..."
 if [[ $MUNKI_ENABLED == true ]]; then
-docker run -d --restart=always --name="munki" \
-    -v $MUNKI_REPO:/munki_repo \
-    -p $MUNKI_PORT:80 -h munki groob/docker-munki
+    docker run -d --restart=always --name="munki" \
+        -v $MUNKI_REPO:/munki_repo \
+        -p $MUNKI_PORT:80 -h munki groob/docker-munki
+
+    # Nginx middleware container for HTTP basic authentication
+    # See https://github.com/beevelop/docker-nginx-basic-auth
+    HTPASSWD_CONTENT=$(sudo head -n 1 $MUNKI_REPO/.htpasswd)
+    docker run -d \
+        -e HTPASSWD="$HTPASSWD_CONTENT" \
+        -e FORWARD_PORT=$MUNKI_PORT \
+        --link web:web -p $MUNKI_PORT:80 \
+        --name auth \
+        beevelop/nginx-basic-auth
 fi
 
 # Start a MunkiWebAdmin2 container
