@@ -48,7 +48,7 @@ AUTOPKG_RECIPE_LIST_LOC="$HOME/Library/AutoPkg/RecipeList"
 
 # Comment this line out if you do not want the recipe-list.txt file in this folder to be used
 # every time this script is run
-cp ./recipe-list.sh $AUTOPKG_RECIPE_LIST_LOC/recipe-list.txt
+cp ./recipe-list.txt $AUTOPKG_RECIPE_LIST_LOC/recipe-list.txt
 
 
 

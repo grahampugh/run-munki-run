@@ -41,7 +41,7 @@ fi
 
 # What type of Docker do we have?
 # Run additional setup steps if using Docker Toolbox
-if [[ $(which docker) ]]; then
+if [[ $(ls /var/run/docker.sock 2> /dev/null) && $(docker ps -q 2> /dev/null) ]]; then
     DOCKER_TYPE="native"
 elif [[ $(which docker-machine) && -d "/Applications/VirtualBox.app" && $(docker ps -q 2> /dev/null) ]]; then
     DOCKER_TYPE="docker-machine"
