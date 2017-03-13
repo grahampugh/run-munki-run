@@ -387,7 +387,7 @@ echo "### If you are testing and don't want to reinstall Munkitools on your clie
 echo "### run the following commands on the client instead:"
 echo
 echo "sudo defaults write /Library/Preferences/ManagedInstalls.plist SoftwareRepoURL \"$HTTP_PROTOCOL://$IP:$MUNKI_PORT/$REPONAME\""
-echo "sudo defaults write /private/var/root/Library/Preferences/ManagedInstalls.plist AdditionalHttpHeaders -array \"$HTPASSWD\""
+echo "sudo defaults write /private/var/root/Library/Preferences/ManagedInstalls.plist AdditionalHttpHeaders -array \"$HTPASSAUTH\""
 echo
 
 # Configure MunkiTools on this computer

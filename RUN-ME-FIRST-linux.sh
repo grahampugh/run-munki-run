@@ -56,7 +56,7 @@ HTPASSWDDONE
 
     sudo chmod 640 "$1/.htaccess" "$1/.htpasswd"
     sudo chown _www:wheel "$1/.htaccess" "$1/.htpasswd"
-    echo $HTPASSWD
+    echo $HTPASSAUTH
 }
 
 # -------------------------------------------------------------------------------------- #
@@ -110,14 +110,14 @@ ${LOGGER} "All Tests Passed! On to the configuration."
 createMunkiRepo "${MUNKI_REPO}"
 
 # Give information about HTTP Basic Authentication set up
-HTPASSWD=$(addHTTPBasicAuth "$MUNKI_REPO")
+HTPASSAUTH=$(addHTTPBasicAuth "$MUNKI_REPO")
 
 echo "### The Linux installer cannot create a Munki installer for you."
 echo "### Therefore you need to manually install Munkitools on a client,"
 echo "### and run the following commands:"
 echo
 echo "sudo defaults write /Library/Preferences/ManagedInstalls.plist SoftwareRepoURL \"$HTTP_PROTOCOL://$IP:$MUNKI_PORT/$REPONAME\""
-echo "sudo defaults write /private/var/root/Library/Preferences/ManagedInstalls.plist AdditionalHttpHeaders -array \"$HTPASSWD\""
+echo "sudo defaults write /private/var/root/Library/Preferences/ManagedInstalls.plist AdditionalHttpHeaders -array \"$HTPASSAUTH\""
 
 ${LOGGER} "All done."
 
