@@ -386,7 +386,7 @@ ${LOGGER} "All Tests Passed! On to the configuration."
 createMunkiRepo "${MUNKI_REPO}"
 
 # Create a client installer pkg pointing to this repo. Thanks Nick!
-HTPASSWD=$(addHTTPBasicAuth)
+HTPASSWD=$(addHTTPBasicAuth "$MUNKI_REPO")
 createMunkiClientInstaller "${IP}" "${MUNKI_PORT}" "${REPONAME}" "${MUNKI_REPO}" "installers" "${HTPASSWD}"
 
 # Configure MunkiTools on this computer
