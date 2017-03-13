@@ -1,7 +1,19 @@
 #!/bin/bash
 
+### Settings
+
+# These settings determine how your Munki repository and web services will be configured.
+# The defaults are reasonable for a Mac.
+
+# Repo and AutoPkg setup only. Set this value to True if you only want to setup the repository
+# and AutoPkg, but do not want to set up the server services (Munki, Munki-Do/MWA2, Sal).
+# Possible scenarios for this include:
+#  * You are using the Mac Server.app to serve the Munki repo.
+#  * You are setting the Munki repo up on a shared folder that is hosted on another computer, such as a Linux VM.
+#NOSERVERSETUP=True
+
 # Munki Repo location. This should be in /Users somewhere (not tested lately)
-REPOLOC="$HOME"
+REPOLOC="/Users/Shared"
 REPONAME="repo"
 MUNKI_REPO="${REPOLOC}/${REPONAME}"
 MUNKI_DEFAULT_SOFTWARE_MANIFEST="core_software"

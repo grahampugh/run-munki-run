@@ -420,12 +420,12 @@ rm -rf "$MUNKI_REPO/run-munki-run"
 ${LOGGER} "All done."
 
 echo
-echo "### You should now have a populated repo!"
-echo "### Now let's start the Munki server..."
+echo "### You should now have a populated repo at $MUNKI_REPO!"
 echo
 
 # This autoruns the second script, if it's there!
-if [[ -f "run-munki-run.sh" ]]; then
+if [[ -f "run-munki-run.sh" && $NOSERVERSETUP != True ]]; then
+    echo "### Now let's start the Munki server..."
     . run-munki-run.sh
 fi
 

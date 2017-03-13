@@ -1,10 +1,12 @@
 # run-munki-run
 
-This is a one command Munki + MunkiWebAdmin2 + Munki-Do + Sal installation using [Docker].
+This is a simple Munki + MunkiWebAdmin2 + Munki-Do + Sal installation using [Docker].
 (You can choose whether you want MWA2 and/or Munki-Do in the settings).
 It also installs MunkiTools and AutoPkg on your machine
 and populates your repo with a few packages from AutoPkg.
 Finally, it creates a preconfigured Client Installer you can distribute to clients.
+
+---
 
 # Prerequisites
 1. [Docker for Mac][Docker] should be installed. *
@@ -17,12 +19,14 @@ Finally, it creates a preconfigured Client Installer you can distribute to clien
 should install [Docker Toolbox] and run
 `/Applications/Docker/QuickStart Terminal.app` to set up the `default` Docker Container.
 
+---
+
 # Operation:
 
+1. `git clone` this repo.
 1. Edit the settings in `settings.sh`. This includes the path to the Munki repo and Sal/MWA2/Munki-Do
    database locations, and the list of default applications to add to AutoPkg.
-   There are many other settings you can alter, such as
-   host ports in case you are already running Docker sites.
+   There are many other settings you can alter.
 2. Run `./RUN-ME-FIRST.sh`
 3. Install Munkitools on some clients.
 4. If you have access to DNS, create an alias to the Docker host named
@@ -42,6 +46,8 @@ run it again.
 To restart the Docker containers, run `./run-munki-run.sh`.
 
 To stop the containers, run `./clean-up.sh`
+
+---
 
 # Configuring Sal
 
@@ -64,6 +70,44 @@ munkiimport sal-enroll-site_default.pkg --subdirectory config/sal --unattended-i
 manifestutil add-pkg sal-enroll-site_default --manifest $MUNKI_DEFAULT_SOFTWARE_MANIFEST
 makecatalogs
 ```
+
+---
+
+# Linux support
+
+Experimental support for Run-Munki-Run on Linux is now in place. So far, this is tested on an Ubuntu 14.04 LTS Virtual Machine running on a Mac.
+
+This uses Docker Community Edition for Ubuntu, set up as per the instructions [here](https://docs.docker.com/engine/installation/linux/ubuntu/). The Docker setup is not as yet included in the run-munki-run scripts, but could easily be added.
+
+To get going on your Linux host:
+
+1. Setup Docker as above.
+1. `git clone` this repo.
+1. Edit the settings in `settings-linux.sh`. This includes the path to the Munki repo and Sal/MWA2/Munki-Do
+   database locations.
+2. Run `./RUN-ME-FIRST-linux.sh`
+
+**Notes:**
+   * AutoPkg can only run on Mac, so is not included here.
+   * Currently, the script can set up the repo folders but not populate them, as this requires the Mac-only munkitools. See **No-Server Setup** below.
+   * If your Virtual Machine is running on a Mac, you can choose a shared folder on the host Mac, so that you can populate the repo locally on the Mac.
+     Follow the **No-Server Setup** instructions below on your Mac to install just the Mac-specific tools.
+   * If you are running this script on a physical Linux host or remote VM, you should set up SMB sharing on the VM,
+     and share the directory so that you can mount the folder from a Mac.
+
+---
+
+# No-Server Setup
+
+If you just want to install the Munki tools and Autopkg on your Mac, and create a Munki repo and populate it:
+
+   * Set `NOSERVERSETUP=True` in `settings.sh` and run the `RUN-ME-FIRST.sh` script to setup the Munki repo at `/Users/Shared`.
+
+Possible scenarios for this include:
+
+   * You are using the Mac Server.app to serve the Munki repo.
+   * You are setting the Munki repo up on a shared folder that is hosted on another computer, such as a Linux VM (see Linux Support above).
+
 
 # Acknowledgements
 
