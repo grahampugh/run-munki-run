@@ -30,7 +30,12 @@ createDatabaseFolder() {
 ## Main section
 
 # import the settings
-. settings-linux.sh
+if [[ $1 == "linux" ]]; then
+    . settings-linux.sh
+else
+    . settings.sh
+fi
+
 
 # What type of Docker do we have?
 # Run additional setup steps if using Docker Toolbox

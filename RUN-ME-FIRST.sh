@@ -426,7 +426,7 @@ echo
 # This autoruns the second script, if it's there!
 if [[ -f "run-munki-run.sh" && $NOSERVERSETUP != True ]]; then
     echo "### Now let's start the Munki server..."
-    . run-munki-run.sh
+    . run-munki-run.sh mac
 fi
 
 exit 0

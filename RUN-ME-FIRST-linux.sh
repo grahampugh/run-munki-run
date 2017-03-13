@@ -205,7 +205,7 @@ echo
 
 # This autoruns the second script, if it's there!
 if [[ -f "run-munki-run.sh" ]]; then
-    . run-munki-run.sh
+    . run-munki-run.sh linux
 fi
 
 exit 0
