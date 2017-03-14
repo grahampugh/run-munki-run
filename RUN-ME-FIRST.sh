@@ -425,9 +425,11 @@ echo
 echo "### AutoPkg Configured"
 
 # make recipe overrides for some packages
-printf '%s\n' "${AUTOPKGRUN}" | while read -r line; do
-    ${AUTOPKG} make-override "$line"
-done
+while read -r line; do
+    if [[ -z $(echo $line | grep "#") ]]; then
+        ${AUTOPKG} make-override "$line"
+    fi
+done < "${AUTOPKG_RECIPE_LIST}"
 echo
 echo "### AutoPkg Overrides updated"
 
