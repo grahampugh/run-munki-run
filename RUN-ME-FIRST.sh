@@ -27,8 +27,10 @@
 # -------------------------------------------------------------------------------------- #
 ## Functions
 
-# Check that we are meeting the minimum version
 versionCheck() {
+    # Check that we are meeting the minimum version
+    # Inputs: 1. $osvers
+
     ${LOGGER} "Starting checks..."
 
     if [[ $osvers -lt $1 ]]; then
@@ -41,8 +43,8 @@ versionCheck() {
     fi
 }
 
-# Check that the script is NOT running as root
 rootCheck() {
+    # Check that the script is NOT running as root
     if [[ $EUID -eq 0 ]]; then
         echo "### This script is NOT MEANT to run as root. This script is meant to be run as an admin user. I'm going to quit now. Run me without the sudo, please."
         echo
@@ -51,6 +53,9 @@ rootCheck() {
 }
 
 downloadMunki() {
+    # Download Munki from github
+    # Inputs: 1. $MUNKI_REPO
+
     MUNKI_LATEST=$(curl https://api.github.com/repos/munki/munki/releases/latest | python -c 'import json,sys;obj=json.load(sys.stdin);print obj["assets"][0]["browser_download_url"]')
 
     mkdir -p "$1"
@@ -58,9 +63,11 @@ downloadMunki() {
 }
 
 installMunki() {
-    # Write a Choices XML file for the Munki package. Thanks Rich and Greg!
+    # Install Munki tools on the host Mac
+    # Inputs: 1. $MUNKI_REPO
 
-    /bin/cat > "/tmp/com.github.grahampugh.run-munki-run.munkiinstall.xml" << 'MUNKICHOICESDONE'
+    # Write a Choices XML file for the Munki package. Thanks Rich and Greg!
+    /bin/cat > "/tmp/com.github.grahampugh.run-munki-run.munkiinstall.xml" <<MUNKICHOICESDONE
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
     <array>
@@ -107,9 +114,9 @@ MUNKICHOICESDONE
     echo
 }
 
-# Installing the Xcode command line tools on 10.10+
-# This section written by Rich Trouton.
 installCommandLineTools() {
+    # Installing the Xcode command line tools on 10.10+
+    # This section written by Rich Trouton.
     echo "### Installing the command line tools..."
     echo
     cmd_line_tools_temp_file="/tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress"
@@ -136,6 +143,8 @@ installCommandLineTools() {
 }
 
 createMunkiRepo() {
+    # Creates the Munki repo folders if they don't already exist
+    # Inputs: 1. $MUNKI_REPO
     munkiFolderList=( "catalogs" "manifests" "pkgs" "pkgsinfo" "icons" )
     for i in ${munkiFolderList[@]}; do
         mkdir -p "$1/$i"
@@ -149,8 +158,39 @@ createMunkiRepo() {
     ${LOGGER} "### Repo permissions set"
 }
 
-# Create a client installer pkg pointing to this repo. Thanks Nick!
+addHTTPBasicAuth() {
+    # Adds basic HTTP authentication based on the password set in settings.py
+    # Inputs:
+    # 1. $MUNKI_REPO
+    # 2. $HTPASSWD
+    # Output: $HTPASSWD
+    sudo rm -f "$1/.htaccess"
+    sudo rm -f "$1/.htpasswd"
+    /bin/cat > "$1/.htaccess" <<HTPASSWDDONE
+AuthType Basic
+AuthName "Munki Repository"
+AuthUserFile $1/.htpasswd
+Require valid-user
+HTPASSWDDONE
+
+    htpasswd -cb "$1/.htpasswd" munki $2
+    HTPASSAUTH=$(python -c "import base64; print \"Authorization: Basic %s\" % base64.b64encode(\"munki:$2\")")
+    # Thanks to Mike Lynn for the fix
+
+    #sudo chmod 640 "$1/.htaccess" "$1/.htpasswd"
+    #sudo chown _www:wheel "$1/.htaccess" "$1/.htpasswd"
+    echo $HTPASSAUTH
+    }
+
 createMunkiClientInstaller() {
+    # Create a client installer pkg pointing to this repo. Thanks Nick!
+    # Inputs:
+    # 1. $IP
+    # 2. $MUNKI_PORT
+    # 3. $REPONAME
+    # 4. $MUNKI_REPO
+    # 5. installers folder
+    # 6. $HTPASSAUTH
     if [[ ! -f /usr/bin/pkgbuild ]]; then
         ${LOGGER} "Pkgbuild is not installed."
         echo "### Please install command line tools first. Exiting..."
@@ -159,14 +199,17 @@ createMunkiClientInstaller() {
     fi
 
     # Set the SoftwareRepoURL
-    mkdir -p "$4/run-munki-run/ClientInstaller/Library/Preferences/"
-    ${DEFAULTS} write "$4/run-munki-run/ClientInstaller/Library/Preferences/ManagedInstalls.plist" SoftwareRepoURL "http://$1:$2/$3"
+    mkdir -p "$4/run-munki-run/ClientInstaller/Library/Preferences"
+    ${DEFAULTS} write "$4/run-munki-run/ClientInstaller/Library/Preferences/ManagedInstalls.plist" SoftwareRepoURL "$HTTP_PROTOCOL://$1:$2/$3"
+    # Add the HTTP Basic Auth key
+    mkdir -p "$4/run-munki-run/ClientInstaller/private/var/root/Library/Preferences"
+    ${DEFAULTS} write "$4/run-munki-run/ClientInstaller/private/var/root/Library/Preferences/ManagedInstalls.plist" AdditionalHttpHeaders -array "$6"
 
     # Add the postinstall script that downloads Munki
     mkdir -p "$4/run-munki-run/scripts"
     cat > "$4/run-munki-run/scripts/postinstall" <<ENDMSG
 #!/bin/bash
-curl -L "http://$1:$2/$3/installers/munki-latest.pkg" -o "/tmp/munki-latest.pkg"
+curl -L "$HTTP_PROTOCOL://$1:$2/$3/installers/munki-latest.pkg" -o "/tmp/munki-latest.pkg"
 installer -pkg "/tmp/munki-latest.pkg" -target /
 rm /tmp/munki-latest.pkg
 ENDMSG
@@ -188,7 +231,7 @@ ENDMSG
     if [[ -f "$4/$5/ClientInstaller.pkg" ]]; then
         ${LOGGER} "Client install pkg created."
         echo
-        echo "### Client install pkg is created. It's in the base of the repo."
+        echo "### Client install pkg is created."
         echo
     else
         ${LOGGER} "Client install pkg failed."
@@ -199,9 +242,10 @@ ENDMSG
     fi
 }
 
-# Get AutoPkg
-# Nod and Toast to Nate Felton!
 installAutoPkg() {
+    # Get AutoPkg
+    # thanks to Nate Felton
+    # Inputs: 1. $MUNKI_REPO
     AUTOPKG_LATEST=$(curl https://api.github.com/repos/autopkg/autopkg/releases | python -c 'import json,sys;obj=json.load(sys.stdin);print obj[0]["assets"][0]["browser_download_url"]')
     /usr/bin/curl -L "${AUTOPKG_LATEST}" -o "$1/autopkg-latest.pkg"
 
@@ -213,8 +257,9 @@ installAutoPkg() {
     echo
 }
 
-# Create Munki manifests
 munkiCreateManifests() {
+    # Create Munki manifests
+    # Inputs: 1-n. list of manifests to create
     for var in "$@"; do
         ${MANU} new-manifest $var
         echo "### $var manifest created"
@@ -222,8 +267,8 @@ munkiCreateManifests() {
     echo
 }
 
-# Munki MakeCatalogs command
 munkiMakeCatalogs() {
+    # Munki MakeCatalogs command
     echo
     echo "### Running makecatalogs..."
     echo
@@ -233,10 +278,10 @@ munkiMakeCatalogs() {
     echo
 }
 
-# Munki add packages to manifest
 munkiAddPackages() {
-    # Code for Array Processing borrowed from First Boot Packager. Thanks Rich!
-    # Changed logic to allow for items with spaces in the names.
+    # Munki: add packages to manifest.
+    # Code adapted from Rich Trouton and Tom Bridge
+    # Inputs: 1. $MUNKI_REPO
     existingCatalogs=($(${MANU} list-catalogs))
     listofpkgs="$(${MANU} list-catalog-items ${existingCatalogs[@]})"
     tLen=$(echo "$listofpkgs" | wc -l)
@@ -263,17 +308,24 @@ munkiAddPackages() {
 # -------------------------------------------------------------------------------------- #
 ## Main section
 
+# Commands
+MUNKILOC="/usr/local/munki"
+GIT="/usr/bin/git"
+MANU="/usr/local/munki/manifestutil"
+DEFAULTS="/usr/bin/defaults"
+AUTOPKG="/usr/local/bin/autopkg"
+
+# OS version check
+osvers=$(sw_vers -productVersion | awk -F. '{print $2}') # Thanks Rich Trouton
+
+# logger
+LOGGER="/usr/bin/logger -t Run-Munki-Run"
+
 # Establish our Basic Variables:
 . settings.sh
 
-# Set proxy if populated
-if [[ -z $HTTP_PROXY ]]; then
-    export http_proxy=$HTTP_PROXY
-fi
-if [[ -z $HTTPS_PROXY ]]; then
-    export https_proxy=$HTTPS_PROXY
-fi
-
+# Path to Munki repo
+MUNKI_REPO="${REPOLOC}/${REPONAME}"
 
 echo
 echo "### Welcome to Run-Munki-Run, a reworking of Tom Bridge's awesome Munki-In-A-Box."
@@ -291,6 +343,7 @@ if [[ $(cat /tmp/quickytest) == "root" ]]; then
 else
     ${LOGGER} "Privilege Escalation Denied, User Cannot Sudo."
     echo "### You are not an admin user, you need to do this an admin user."
+    echo
     exit 1
 fi
 
@@ -331,18 +384,27 @@ ${LOGGER} "All Tests Passed! On to the configuration."
 createMunkiRepo "${MUNKI_REPO}"
 
 # Create a client installer pkg pointing to this repo. Thanks Nick!
-createMunkiClientInstaller "${IP}" "${MUNKI_PORT}" "${REPONAME}" "${MUNKI_REPO}" "installers"
+HTPASSAUTH=$(addHTTPBasicAuth "$MUNKI_REPO" "$HTPASSWD")
+createMunkiClientInstaller "${IP}" "${MUNKI_PORT}" "${REPONAME}" "${MUNKI_REPO}" "installers" "${HTPASSAUTH}"
+
+echo "### If you are testing and don't want to reinstall Munkitools on your client,"
+echo "### run the following commands on the client instead:"
+echo
+echo "sudo defaults write /Library/Preferences/ManagedInstalls.plist SoftwareRepoURL \"$HTTP_PROTOCOL://$IP:$MUNKI_PORT/$REPONAME\""
+echo "sudo defaults write /private/var/root/Library/Preferences/ManagedInstalls.plist AdditionalHttpHeaders -array \"$HTPASSAUTH\""
+echo
 
 # Configure MunkiTools on this computer
 ${DEFAULTS} write com.googlecode.munki.munkiimport editor "${TEXTEDITOR}"
-echo "munkiimport editor set to ${TEXTEDITOR}"
+echo "### munkiimport editor set to ${TEXTEDITOR}"
 ${DEFAULTS} write com.googlecode.munki.munkiimport repo_path "${MUNKI_REPO}"
-echo "${MUNKI_REPO} set"
+echo "### ${MUNKI_REPO} set"
 ${DEFAULTS} write com.googlecode.munki.munkiimport pkginfo_extension ".plist"
-echo "pkginfo_extension set"
+echo "### pkginfo_extension set"
 ${DEFAULTS} write com.googlecode.munki.munkiimport default_catalog "testing"
-echo "default_catalog set"
+echo "### default catalog set to testing"
 plutil -convert xml1 ~/Library/Preferences/com.googlecode.munki.munkiimport.plist
+echo
 
 # Get AutoPkg
 # Nod and Toast to Nate Felton!
@@ -353,7 +415,7 @@ fi
 # Configure AutoPkg for use with Munki and Sal
 if [[ $(${DEFAULTS} read com.github.autopkg MUNKI_REPO) != "${MUNKI_REPO}" ]]; then
     ${DEFAULTS} write com.github.autopkg MUNKI_REPO "${MUNKI_REPO}"
-    echo "${MUNKI_REPO} set in AutoPkg"
+    echo "### ${MUNKI_REPO} set in AutoPkg"
 fi
 
 # Check if there is already an AutoPkg recipe list.
@@ -416,6 +478,7 @@ munkiMakeCatalogs
 # Clean Up When Done
 rm "$MUNKI_REPO/autopkg-latest.pkg"
 rm -rf "$MUNKI_REPO/run-munki-run"
+rm /tmp/quickytest
 
 ${LOGGER} "All done."
 

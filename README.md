@@ -12,7 +12,8 @@ but does not rely on an existing web service such as the Mac Server.app.
    * Builds a preconfigured Munki Client Installer that you can distribute to clients
    * Adds AutoPkg repositories, makes Recipe Overrides and runs the recipes to
      populate your Munki repository
-   * Creates a Docker container that serves the Munki repository
+   * Creates a Docker container that serves the Munki repository with Basic HTTP
+     Authentication
    * Creates a Docker container that serves the Sal reporting service
    * Creates a Docker container that serves MunkiWebAdmin2
    * Creates a Docker container that serves Munki-Do
@@ -46,26 +47,16 @@ should install [Docker Toolbox] and run
 1. `git clone` this repo.
 1. Edit the settings in `settings.sh`. This includes the path to the Munki repo and Sal/MWA2/Munki-Do
    database locations, and the list of default applications to add to AutoPkg.
-   There are many other settings you can alter.
+   There are many other settings you can alter. You **must** supply a HTTP Authentication password.
 2. Run `./RUN-ME-FIRST.sh`
 3. Install Munkitools on some clients.
-4. If you have access to DNS, create an alias to the Docker host named
-   `munki.yourname.com` and add an alias (CNAME) of `munki`. You need to
-   reverse proxy from my-docker-host:port to munki:80 (by default). You will then not need to
-   configure Munki on the client. If you cannot create an alias, then set the ServerURL
-   on the client with the following command:  
-
-   `sudo defaults write /Library/Preferences/ManagedInstalls.plist ServerURL http://my-docker-host:port/repo`
-
-5. To enable reporting, configure Sal, and push out the Sal preferences to the
+4. To enable reporting, configure Sal, and push out the Sal preferences to the
    clients (e.g. in a package). Instructions for setting up Sal are given below.
 
 You should only need to run `./RUN-ME-FIRST.sh` once, but it won't break things if you
 run it again.
 
 To restart the Docker containers, run `./run-munki-run.sh`.
-
-To stop the containers, run `./clean-up.sh`
 
 ---
 

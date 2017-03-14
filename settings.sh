@@ -16,28 +16,27 @@
 REPOLOC="/Users/Shared"
 REPONAME="repo"
 MUNKI_REPO="${REPOLOC}/${REPONAME}"
+AUTOPKG_RECIPE_LIST="$HOME/Library/AutoPkg/recipe-list.txt"
+
+# HTTP or HTTPS?
+# You can direct to https if you like. You would have to have a valid certificate
+# already on the server. This is most suited to those of you serving the Munki
+# folders via Server.app or a native Nginx/Apache installation.
+# If you're running the Docker-Munki container, then this isn't so easy
+# to automate. I suggest taking a look at: http://aulin.co/2015/Munki-SSL-Docker/
+# and changing the docker run command in run-munki-run.sh.
+HTTP_PROTOCOL="http"
+
+# What do you want to call your Munki software manifest?
+# site_default will be created, and this manifest will be added as an
+# included_manifest
 MUNKI_DEFAULT_SOFTWARE_MANIFEST="core_software"
 
-# Databases location. This should be away from shared directories e.g. the web root.
-DBLOC="$HOME/munki-databases"
-
-# Commands
-MUNKILOC="/usr/local/munki"
-GIT="/usr/bin/git"
-MANU="/usr/local/munki/manifestutil"
-DEFAULTS="/usr/bin/defaults"
-AUTOPKG="/usr/local/bin/autopkg"
+# HTTP Basic Authentication password
+HTPASSWD="CHANGE_ME!!!NO_REALLY!!!"
 
 # Preferred text editor
-TEXTEDITOR="TextWrangler.app"
-
-# OS version check
-osvers=$(sw_vers -productVersion | awk -F. '{print $2}') # Thanks Rich Trouton
-
-# Some other directories
-MAINPREFSDIR="/Library/Preferences"
-SCRIPTDIR="/usr/local/bin"
-AUTOPKG_RECIPE_LIST="$HOME/Library/AutoPkg/recipe-list.txt"
+TEXTEDITOR="Atom.app"
 
 # AutoPkg repos
 read -r -d '' AUTOPKGREPOS <<ENDMSG
@@ -53,42 +52,44 @@ valdore86-recipes
 grahampugh/recipes
 ENDMSG
 
-# Autopkg selections
-read -r -d '' AUTOPKGRUN <<ENDMSG
-AdobeFlashPlayer.munki.recipe
-AdobeReader.munki.recipe
-AdobeReaderUpdates.munki.recipe
-Atom.munki.recipe
-Firefox.munki.recipe
-GoogleChrome.munki.recipe
-osquery.munki.recipe
-Sal-osquery.munki.recipe
-Sal.munki.recipe
-Slack.munki.recipe
-munkitools2.munki.recipe
-MakeCatalogs.munki.recipe
-ENDMSG
+# Comment this line out if you do not want the recipe-list.txt file in this folder to be used
+# every time this script is run
+cp ./recipe-list.txt $AUTOPKG_RECIPE_LIST
 
-# Others
-# BBEdit.munki.recipe
-# KeePassX.munki.recipe
-# Recipe Robot.munki.recipe
-# Smultron8.munki.recipe
-# SublimeText3.munki.recipe
-# Textmate.munki.recipe
-# VisualStudioCode.munki.recipe
 
-# AutoPkgr stuff
-AUTOPKG_RECIPE_LIST_LOC="$HOME/Library/AutoPkg/RecipeList"
+# IP address/host name
+# If your Mac has more than one interface, you'll need to change to en0 for wired, en1 if you're running on wifi.
+IP=$(ipconfig getifaddr en0)
+# Well, let's try en1 if en0 is empty
+if [[ -z "$IP" ]]; then
+    IP=$(ipconfig getifaddr en1)
+fi
+# Override this for setups where the Munki host is remote
+if [[ "$MUNKI_HOST" ]]; then
+    IP=$MUNKI_HOST
+fi
 
-## Docker variables
 
-# Munki container variables:
+### Docker variables for run-munki-run.sh
+
+## Databases location. This should be away from shared directories e.g. the web root.
+DBLOC="$HOME/munki-databases"
+
+## Munki container variables:
+# Enabled by default. Set to true if you wish to have a Docker Munki server.
+# Set to false if you are using something else to serve Munki e.g. Server.app
+MUNKI_ENABLED=true
+# If MUNKI_ENABLED=false, and/or NOSERVERSETUP=True, you can set a remote address
+# for the Munki server here, which will override the $IP variable based on this
+# host.
+# MUNKI_HOST=123.34.67.89
 # Set the public port on which you wish to access Munki
 # Note: Docker-Machine with VirtualBox cannot forward ports under 1024
 MUNKI_PORT=8000
 
 ## Sal settings:
+# Enabled by default. Set to true if you wish to use Sal:
+SAL_ENABLED=true
 # Create a new folder to house the Sal Django database and point to it here:
 # If using Docker-Machine, it must be within /Users somewhere:
 SAL_DB="${DBLOC}/sal-db"
@@ -106,7 +107,7 @@ MWA2_PORT=8003
 
 ## Munki-Do settings:
 # Disabled by default. Set to true if you wish to use Munki-Do:
-MUNKI_DO_ENABLED=true
+MUNKI_DO_ENABLED=false
 # Create a new folder to house the Munki-Do Django database and point to it here.
 # If using Docker-Machine, it must be within /Users somewhere:
 MUNKI_DO_DB="${DBLOC}/munki-do-db"
@@ -123,18 +124,3 @@ LOGIN_REDIRECT_URL="/pkgs"
 # Munki-Do timezone is 'Europe/Zurich' by default, but you can change to whatever you
 # wish using the codes listed at http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
 TIME_ZONE='Europe/Zurich'
-
-# logger
-LOGGER="/usr/bin/logger -t Run-Munki-Run"
-
-# IP address
-# If your Mac has more than one interface, you'll need to change to en0 for wired, en1 if you're running on wifi.
-IP=$(ipconfig getifaddr en0)
-if [[ -z "$IP" ]]; then
-    # Let's try en1 just in case it helps
-    IP=$(ipconfig getifaddr en1)
-fi
-
-# Proxy Servers - add these if you need to for curl
-#HTTP_PROXY=http://proxy.my.company:2010/
-#HTTPS_PROXY=$HTTP_PROXY
