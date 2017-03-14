@@ -2,10 +2,13 @@ osquery.munki.recipe
 Sal-osquery.munki.recipe
 Sal.munki.recipe
 munkitools2.munki.recipe
+AutoPkgr.install.recipe
+MunkiAdmin.munki.recipe
 # AdobeFlashPlayer.munki.recipe
 # AdobeReader.munki.recipe
 # AdobeReaderUpdates.munki.recipe
 # Atom.munki.recipe
+# AutoPkgr.munki.recipe
 # BBEdit.munki.recipe
 # Firefox.munki.recipe
 # GoogleChrome.munki.recipe

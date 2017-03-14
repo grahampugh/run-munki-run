@@ -418,24 +418,18 @@ if [[ $(${DEFAULTS} read com.github.autopkg MUNKI_REPO) != "${MUNKI_REPO}" ]]; t
     echo "### ${MUNKI_REPO} set in AutoPkg"
 fi
 
-# Check if there is already an AutoPkg recipe list.
-# If so we can skip running AutoPkg here as it has already been done in the past
-if [[ ! -f "${AUTOPKG_RECIPE_LIST}" ]]; then
-    # Add AutoPkg recipes
-    ${AUTOPKG} repo-add ${AUTOPKGREPOS}
-    ${LOGGER} "AutoPkg Configured"
-    echo
-    echo "### AutoPkg Configured"
+# Add AutoPkg recipes
+${AUTOPKG} repo-add ${AUTOPKGREPOS}
+${LOGGER} "AutoPkg Configured"
+echo
+echo "### AutoPkg Configured"
 
-    # make recipe overrides for some packages
-    printf '%s\n' "${AUTOPKGRUN}" | while read -r line; do
-        ${AUTOPKG} make-override "$line"
-    done
-    echo
-
-    # Create a recipe list file so it's easy to run in the future
-    echo "${AUTOPKGRUN}" >> "${AUTOPKG_RECIPE_LIST}"
-fi
+# make recipe overrides for some packages
+printf '%s\n' "${AUTOPKGRUN}" | while read -r line; do
+    ${AUTOPKG} make-override "$line"
+done
+echo
+echo "### AutoPkg Overrides updated"
 
 # Run the AutoPkg recipe list
 ${AUTOPKG} run --recipe-list="${AUTOPKG_RECIPE_LIST}"
