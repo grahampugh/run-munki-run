@@ -295,7 +295,7 @@ munkiAddPackages() {
         printf '%s\n' "$listofpkgs" | while read -r line; do
             ${LOGGER} "Adding $line to $1"
             optionalInstall=""
-            if [[ -z $(echo "$line" | egrep -i 'munki|sal') ]]; then
+            if [[ -z $(echo "$line" | egrep -i 'munkitools|sal|osquery') ]]; then
                 optionalInstall="--section optional_installs"
             fi
             ${MANU} add-pkg "$line" --manifest "$1" $optionalInstall
