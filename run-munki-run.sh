@@ -20,7 +20,7 @@ dockerCleanUp() {
     # (thanks to Pepijn Bruienne):
     echo "### Stopping and removing old Docker instances..."
     docker ps -a | sed "s/\ \{2,\}/$(printf '\t')/g" | \
-        awk -F"\t" '/apache|munki|sal|postgres-sal|mwa2|munki-do/{print $1}' | \
+        awk -F"\t" '/apache|munki|sal|postgres-sal|mwa2|munki-do|auth|web/{print $1}' | \
         xargs docker rm -f
     echo "### ...done"
     echo
@@ -71,7 +71,7 @@ rootCheck
 # Run additional setup steps if using Docker Toolbox
 if [[ $(ls /var/run/docker.sock 2> /dev/null) && $(docker ps -q 2> /dev/null) ]]; then
     DOCKER_TYPE="native"
-elif [[ $(which docker-machine) && -d "/Applications/VirtualBox.app" && $(docker ps -q 2> /dev/null) ]]; then
+elif [[ $(which docker-machine) && -d "/Applications/VirtualBox.app" && -z $(docker ps -q 1> /dev/null) ]]; then
     DOCKER_TYPE="docker-machine"
 # Docker-machine is running but env is wrong
 elif [[ $(which docker-machine) && -d "/Applications/VirtualBox.app" && $(docker-machine ls | grep default | grep Running) ]]; then
@@ -146,18 +146,18 @@ echo "### Munki Server Docker..."
 if [[ $MUNKI_ENABLED == true ]]; then
     docker run -d --restart=always --name="munki" \
         -v $MUNKI_REPO:/munki_repo \
-        -p $MUNKI_PORT:80 -h munki groob/docker-munki
+        -p $MUNKI_PORT:80 -h munki grahampugh/docker-munki
 
-    # Nginx middleware container for HTTP basic authentication
-    # See https://github.com/beevelop/docker-nginx-basic-auth
-    HTPASSWD_CONTENT=$(sudo head -n 1 $MUNKI_REPO/.htpasswd)
-    echo $HTPASSWD_CONTENT
-    docker run -d \
-        -e HTPASSWD="$HTPASSWD_CONTENT" \
-        -e FORWARD_PORT=$MUNKI_PORT \
-        --link munki:web -p $MUNKI_PORT:80 \
-        --name auth \
-        beevelop/nginx-basic-auth
+#     # Nginx middleware container for HTTP basic authentication
+#     # See https://github.com/beevelop/docker-nginx-basic-auth
+#     HTPASSWD_CONTENT=$(sudo head -n 1 $MUNKI_REPO/.htpasswd)
+#     echo $HTPASSWD_CONTENT
+#     docker run -d \
+#         -e HTPASSWD=$HTPASSWD_CONTENT \
+#         -e FORWARD_PORT=8765 \
+#         --link web:web -p $MUNKI_PORT:80 \
+#         --name auth \
+#         beevelop/nginx-basic-auth
 fi
 
 # Start a MunkiWebAdmin2 container

@@ -160,8 +160,12 @@ createMunkiRepo() {
 
 addHTTPBasicAuth() {
     # Adds basic HTTP authentication based on the password set in settings.py
-    # Inputs: 1. $MUNKI_REPO
+    # Inputs:
+    # 1. $MUNKI_REPO
+    # 2. $HTPASSWD
     # Output: $HTPASSWD
+    sudo rm -f "$1/.htaccess"
+    sudo rm -f "$1/.htpasswd"
     /bin/cat > "$1/.htaccess" <<HTPASSWDDONE
 AuthType Basic
 AuthName "Munki Repository"
@@ -169,12 +173,12 @@ AuthUserFile $1/.htpasswd
 Require valid-user
 HTPASSWDDONE
 
-    htpasswd -cb $1/.htpasswd munki $HTPASSWD
-    HTPASSAUTH=$(python -c "import base64; print \"Authorization: Basic %s\" % base64.b64encode(\"munki:$HTPASSWD\")")
+    htpasswd -cb "$1/.htpasswd" munki $2
+    HTPASSAUTH=$(python -c "import base64; print \"Authorization: Basic %s\" % base64.b64encode(\"munki:$2\")")
     # Thanks to Mike Lynn for the fix
 
-    sudo chmod 640 "$1/.htaccess" "$1/.htpasswd"
-    sudo chown _www:wheel "$1/.htaccess" "$1/.htpasswd"
+    #sudo chmod 640 "$1/.htaccess" "$1/.htpasswd"
+    #sudo chown _www:wheel "$1/.htaccess" "$1/.htpasswd"
     echo $HTPASSAUTH
     }
 
@@ -186,7 +190,7 @@ createMunkiClientInstaller() {
     # 3. $REPONAME
     # 4. $MUNKI_REPO
     # 5. installers folder
-    # 6. $HTPASSWD
+    # 6. $HTPASSAUTH
     if [[ ! -f /usr/bin/pkgbuild ]]; then
         ${LOGGER} "Pkgbuild is not installed."
         echo "### Please install command line tools first. Exiting..."
@@ -227,7 +231,7 @@ ENDMSG
     if [[ -f "$4/$5/ClientInstaller.pkg" ]]; then
         ${LOGGER} "Client install pkg created."
         echo
-        echo "### Client install pkg is created. It's in the base of the repo."
+        echo "### Client install pkg is created."
         echo
     else
         ${LOGGER} "Client install pkg failed."
@@ -380,7 +384,7 @@ ${LOGGER} "All Tests Passed! On to the configuration."
 createMunkiRepo "${MUNKI_REPO}"
 
 # Create a client installer pkg pointing to this repo. Thanks Nick!
-HTPASSAUTH=$(addHTTPBasicAuth "$MUNKI_REPO")
+HTPASSAUTH=$(addHTTPBasicAuth "$MUNKI_REPO" "$HTPASSWD")
 createMunkiClientInstaller "${IP}" "${MUNKI_PORT}" "${REPONAME}" "${MUNKI_REPO}" "installers" "${HTPASSAUTH}"
 
 echo "### If you are testing and don't want to reinstall Munkitools on your client,"
