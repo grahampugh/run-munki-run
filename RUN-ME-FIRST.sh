@@ -224,7 +224,7 @@ ENDMSG
     # Build the package
     /usr/bin/pkgbuild --info "$4/run-munki-run/PackageInfo" \
         --identifier com.grahamrpugh.munkiclient.pkg \
-        --root "$4/run-munki-run//ClientInstaller" \
+        --root "$4/run-munki-run/ClientInstaller" \
         --scripts "$4/run-munki-run/scripts" \
         "$4/$5/ClientInstaller.pkg"
 

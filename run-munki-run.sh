@@ -69,9 +69,9 @@ rootCheck
 
 # What type of Docker do we have?
 # Run additional setup steps if using Docker Toolbox
-if [[ $(ls /var/run/docker.sock 2> /dev/null) && $(docker ps -q 2> /dev/null) ]]; then
+if ls /var/run/docker.sock 2> /dev/null && docker ps -q 2> /dev/null ; then
     DOCKER_TYPE="native"
-elif [[ $(which docker-machine) && -d "/Applications/VirtualBox.app" && -z $(docker ps -q 1> /dev/null) ]]; then
+elif which docker-machine && -d "/Applications/VirtualBox.app" && ! docker ps -q 1> /dev/null ; then
     DOCKER_TYPE="docker-machine"
 # Docker-machine is running but env is wrong
 elif [[ $(which docker-machine) && -d "/Applications/VirtualBox.app" && $(docker-machine ls | grep default | grep Running) ]]; then
@@ -104,8 +104,9 @@ elif [[ $(which docker-machine) && -d "/Applications/VirtualBox.app" && $(docker
 elif [[ -d "/Applications/Safari.app" ]]; then
     echo
     echo "--- ACTION REQUIRED ---"
-    echo "You do not appear to have Docker installed."
-    echo "Go to Docker.com and get the native Docker for Mac (new Macs since 2010)"
+    echo "You do not appear to have Docker installed (or it is not running)."
+    echo "If the app is installed, make sure it is running."
+    echo "or go to Docker.com and get the native Docker for Mac (new Macs since 2010)"
     echo "or the Docker Toolbox (older Macs)"
     echo "---"
     echo
@@ -146,7 +147,7 @@ echo "### Munki Server Docker..."
 if [[ $MUNKI_ENABLED == true ]]; then
     docker run -d --restart=always --name="munki" \
         -v $MUNKI_REPO:/munki_repo \
-        -p $MUNKI_PORT:80 -h munki grahampugh/docker-munki
+        -p $MUNKI_PORT:80 -h munki grahamrpugh/docker-munki
 
 #     # Nginx middleware container for HTTP basic authentication
 #     # See https://github.com/beevelop/docker-nginx-basic-auth
@@ -171,7 +172,8 @@ if [[ $MWA2_ENABLED == true ]]; then
         -p $MWA2_PORT:8000 \
         -v $MUNKI_REPO:/munki_repo \
         -v $MWA2_DB:/mwa2-db \
-        grahamrpugh/mwa2
+        -e ADMIN_PASS=$ADMIN_PASSWORD \
+        macadmins/mwa2
 fi
 
 # Start a Sal container
@@ -184,7 +186,7 @@ if [[ $SAL_ENABLED == true ]]; then
       --restart="always" \
       -p $SAL_PORT:8000 \
       -v $SAL_DB:/home/docker/sal/db \
-      -e ADMIN_PASS=pass \
+      -e ADMIN_PASS=$ADMIN_PASSWORD \
       -e DOCKER_SAL_TZ="Europe/Zurich" \
       macadmins/sal
 fi
@@ -199,6 +201,7 @@ if [[ $MUNKI_DO_ENABLED == true ]]; then
         -p $MUNKI_DO_PORT:8000 \
         -v $MUNKI_REPO:/munki_repo \
         -v $MUNKI_DO_DB:/munki-do-db \
+        -e ADMIN_PASS=$ADMIN_PASSWORD \
         -e DOCKER_MUNKIDO_TIME_ZONE="$TIME_ZONE" \
         -e DOCKER_MUNKIDO_LOGIN_REDIRECT_URL="$LOGIN_REDIRECT_URL" \
         -e DOCKER_MUNKIDO_ALL_ITEMS="$ALL_ITEMS" \

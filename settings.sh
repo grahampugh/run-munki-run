@@ -12,6 +12,9 @@
 #  * You are setting the Munki repo up on a shared folder that is hosted on another computer, such as a Linux VM.
 #NOSERVERSETUP=True
 
+# HTTP Basic Authentication password
+HTPASSWD="CHANGE_ME!!!NO_REALLY!!!"
+
 # Munki Repo location. This should be in /Users somewhere (not tested lately)
 REPOLOC="/Users/Shared"
 REPONAME="repo"
@@ -31,9 +34,6 @@ HTTP_PROTOCOL="http"
 # site_default will be created, and this manifest will be added as an
 # included_manifest
 MUNKI_DEFAULT_SOFTWARE_MANIFEST="core_software"
-
-# HTTP Basic Authentication password
-HTPASSWD="CHANGE_ME!!!NO_REALLY!!!"
 
 # Preferred text editor
 TEXTEDITOR="Atom.app"
@@ -72,6 +72,7 @@ fi
 
 ### Docker variables for run-munki-run.sh
 
+ADMIN_PASSWORD="run-munki-run"
 ## Databases location. This should be away from shared directories e.g. the web root.
 DBLOC="$HOME/munki-databases"
 
