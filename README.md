@@ -129,5 +129,5 @@ Possible scenarios for this include:
 
 
 [Munki-In-A-Box]: https://github.com/tbridge/munki-in-a-box
-[Docker]: https://github.com/tbridge/munki-in-a-box
+[Docker]: https://docs.docker.com/desktop/install/mac-install/
 [Docker Toolbox]: https://www.docker.com/products/docker-toolbox
