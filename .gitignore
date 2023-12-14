@@ -1,1 +1,5 @@
 *.pkg
+*.crt
+*.key
+*.pem
+*.csr

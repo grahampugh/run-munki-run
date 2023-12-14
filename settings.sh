@@ -21,14 +21,32 @@ REPONAME="repo"
 MUNKI_REPO="${REPOLOC}/${REPONAME}"
 AUTOPKG_RECIPE_LIST="$HOME/Library/AutoPkg/recipe-list.txt"
 
+# AutoPkg GitHub Token - required for recipe searching
+GITHUB_TOKEN=
+
+# AutoPkg default for failing unverified recipes
+fail_recipes="yes"
+
+# AutoPkg default for installing beta version
+use_beta="yes"
+
 # HTTP or HTTPS?
 # You can direct to https if you like. You would have to have a valid certificate
-# already on the server. This is most suited to those of you serving the Munki
-# folders via Server.app or a native Nginx/Apache installation.
-# If you're running the Docker-Munki container, then this isn't so easy
-# to automate. I suggest taking a look at: http://aulin.co/2015/Munki-SSL-Docker/
-# and changing the docker run command in run-munki-run.sh.
-HTTP_PROTOCOL="http"
+# already on the server, or generate self-signed certificates. 
+# To prevent generating new certs, set GENERATE_CERTIFICATES=false
+GENERATE_CERTIFICATES=true
+
+# If generating certificates, you need a Certificate Authority Name and associated details
+# Do not have any spaces or special characters in CA_NAME
+CA_NAME=RunMunkiRun
+CA_COUNTRY=DE
+CA_STATE=Bavaria
+CA_LOCALE=Erlangen
+CA_ORG=RunMunkiRun
+
+# To use HTTPS, change HTTP_PROTOCOL to 'https' or to use HTTP, set to 'http'. 
+# If GENERATE_CERTIFICATES=true, these certificates will be used.
+HTTP_PROTOCOL="https"
 
 # What do you want to call your Munki software manifest?
 # site_default will be created, and this manifest will be added as an
@@ -36,11 +54,12 @@ HTTP_PROTOCOL="http"
 MUNKI_DEFAULT_SOFTWARE_MANIFEST="core_software"
 
 # Preferred text editor
-TEXTEDITOR="Atom.app"
+TEXTEDITOR="Visual Studio Code.app"
 
 # AutoPkg repos
 read -r -d '' AUTOPKGREPOS <<ENDMSG
 recipes
+grahampugh-recipes
 grahamgilbert-recipes
 hjuutilainen-recipes
 homebysix-recipes
@@ -49,13 +68,11 @@ keeleysam-recipes
 killahquam-recipes
 scriptingosx-recipes
 valdore86-recipes
-grahampugh/recipes
 ENDMSG
 
-# Comment this line out if you do not want the recipe-list.txt file in this folder to be used
-# every time this script is run
+# Comment this line out if you do not want the recipe-list.txt file in this folder 
+# to be used every time this script is run
 cp ./recipe-list.txt $AUTOPKG_RECIPE_LIST
-
 
 # IP address/host name
 # If your Mac has more than one interface, you'll need to change to en0 for wired, en1 if you're running on wifi.
@@ -90,7 +107,7 @@ MUNKI_PORT=8000
 
 ## Sal settings:
 # Enabled by default. Set to true if you wish to use Sal:
-SAL_ENABLED=true
+SAL_ENABLED=false
 # Create a new folder to house the Sal Django database and point to it here:
 # If using Docker-Machine, it must be within /Users somewhere:
 SAL_DB="${DBLOC}/sal-db"
@@ -98,7 +115,7 @@ SAL_DB="${DBLOC}/sal-db"
 SAL_PORT=8001
 
 ## MWA2 settings:
-# Enabled by default. Set to true if you wish to use Munki-Do:
+# Enabled by default. Set to false if you wish to use Munki-Do instead:
 MWA2_ENABLED=true
 # Create a new folder to house the MWA2 Django database and point to it here:
 # If using Docker-Machine, it must be within /Users somewhere:

@@ -68,13 +68,13 @@ fi
 rootCheck
 
 # What type of Docker do we have?
-# Run additional setup steps if using Docker Toolbox
+# (additional setup steps are required if using Docker Toolbox)
 if ls /var/run/docker.sock 2> /dev/null && docker ps -q 2> /dev/null ; then
     DOCKER_TYPE="native"
 elif which docker-machine && -d "/Applications/VirtualBox.app" && ! docker ps -q 1> /dev/null ; then
     DOCKER_TYPE="docker-machine"
-# Docker-machine is running but env is wrong
 elif [[ $(which docker-machine) && -d "/Applications/VirtualBox.app" && $(docker-machine ls | grep default | grep Running) ]]; then
+    # Docker-machine is running but env is wrong
     echo
     echo "--- ACTION REQUIRED ---"
     echo "Docker Toolbox is installed and running, but you need to set up the shell environment to run docker commands"
@@ -144,21 +144,32 @@ dockerCleanUp
 
 # Start the Munki server container
 echo "### Munki Server Docker..."
-if [[ $MUNKI_ENABLED == true ]]; then
-    docker run -d --restart=always --name="munki" \
-        -v $MUNKI_REPO:/munki_repo \
-        -p $MUNKI_PORT:80 -h munki grahamrpugh/docker-munki
-
-#     # Nginx middleware container for HTTP basic authentication
-#     # See https://github.com/beevelop/docker-nginx-basic-auth
-#     HTPASSWD_CONTENT=$(sudo head -n 1 $MUNKI_REPO/.htpasswd)
-#     echo $HTPASSWD_CONTENT
-#     docker run -d \
-#         -e HTPASSWD=$HTPASSWD_CONTENT \
-#         -e FORWARD_PORT=8765 \
-#         --link web:web -p $MUNKI_PORT:80 \
-#         --name auth \
-#         beevelop/nginx-basic-auth
+if [[ $MUNKI_ENABLED ]]; then
+    if [[ $HTTP_PROTOCOL == "https" ]]; then
+        # if we are using HTTPS then we need to build an SSL docker image containing the certs
+        MUNKICONFIGDIR="/Users/Shared/munki-config"
+        mkdir -p "$MUNKICONFIGDIR/conf.d"
+        
+        cp server.crt server.key ca.crt ../docker-munki-ssl/
+        docker build --no-cache --pull -t grahamrpugh/docker-munki-ssl ../docker-munki-ssl
+        docker run -d --restart=always --name="munki" \
+            -v $MUNKI_REPO:/munki_repo \
+            -p $MUNKI_PORT:443 -h munki grahamrpugh/docker-munki-ssl
+    else
+        docker run -d --restart=always --name="munki" \
+            -v $MUNKI_REPO:/munki_repo \
+            -p $MUNKI_PORT:80 -h munki grahamrpugh/docker-munki
+    fi
+    # # Nginx middleware container for HTTP basic authentication
+    # # See https://github.com/beevelop/docker-nginx-basic-auth
+    # HTPASSWD_CONTENT=$(sudo head -n 1 $MUNKI_REPO/.htpasswd)
+    # echo $HTPASSWD_CONTENT
+    # docker run -d \
+    #     -e HTPASSWD=$HTPASSWD_CONTENT \
+    #     -e FORWARD_PORT=8765 \
+    #     --link web:web -p $MUNKI_PORT:80 \
+    #     --name auth \
+    #     beevelop/nginx-basic-auth
 fi
 
 # Start a MunkiWebAdmin2 container
@@ -173,7 +184,7 @@ if [[ $MWA2_ENABLED == true ]]; then
         -v $MUNKI_REPO:/munki_repo \
         -v $MWA2_DB:/mwa2-db \
         -e ADMIN_PASS=$ADMIN_PASSWORD \
-        macadmins/mwa2
+        grahamrpugh/mwa2
 fi
 
 # Start a Sal container
@@ -214,26 +225,28 @@ fi
 echo
 echo "### All done!"
 echo
-echo "--- SAL SETUP INSTRUCTIONS ---"
-echo
-echo "1. Open Sal at $HTTP_PROTOCOL://$IP:$SAL_PORT"
-echo "2. Create a business unit named 'Default' and a machine group named 'site_default'."
-echo "3. Choose the 'person' menu at the top right and then choose Settings."
-echo "4. From the sidebar, choose API keys and then choose to make a new one."
-echo "5. Give it a name so you can recognise it - e.g. 'PKG Generator'."
-echo "6. You will then be given a public key and a private key."
-echo "7. Enter the following command in terminal to generate the enroll package:"
-echo
-echo "python sal_package_generator.py --sal_url=$HTTP_PROTOCOL://$IP:$SAL_PORT --public_key=<PUBLIC_KEY> --private_key=<PRIVATE_KEY> --pkg_id=com.salopensource.sal_enroll"
-echo
-echo "8. Enter the following commands to import the package to Munki:"
-echo
-echo "munkiimport sal-enroll-site_default.pkg --subdirectory config/sal --unattended-install --displayname=\"Sal Enrollment for site_default\" --developer=\"Graham Gilbert\" -n"
-echo "manifestutil add-pkg sal-enroll-site_default --manifest $MUNKI_DEFAULT_SOFTWARE_MANIFEST"
-echo "makecatalogs"
-echo
-echo "--- END OF SAL SETUP INSTRUCTIONS ---"
-echo
+if [[ $SAL_ENABLED == true ]]; then
+    echo "--- SAL SETUP INSTRUCTIONS ---"
+    echo
+    echo "1. Open Sal at $HTTP_PROTOCOL://$IP:$SAL_PORT"
+    echo "2. Create a business unit named 'Default' and a machine group named 'site_default'."
+    echo "3. Choose the 'person' menu at the top right and then choose Settings."
+    echo "4. From the sidebar, choose API keys and then choose to make a new one."
+    echo "5. Give it a name so you can recognise it - e.g. 'PKG Generator'."
+    echo "6. You will then be given a public key and a private key."
+    echo "7. Enter the following command in terminal to generate the enroll package:"
+    echo
+    echo "python sal_package_generator.py --sal_url=$HTTP_PROTOCOL://$IP:$SAL_PORT --public_key=<PUBLIC_KEY> --private_key=<PRIVATE_KEY> --pkg_id=com.salopensource.sal_enroll"
+    echo
+    echo "8. Enter the following commands to import the package to Munki:"
+    echo
+    echo "munkiimport sal-enroll-site_default.pkg --subdirectory config/sal --unattended-install --displayname=\"Sal Enrollment for site_default\" --developer=\"Graham Gilbert\" -n"
+    echo "manifestutil add-pkg sal-enroll-site_default --manifest $MUNKI_DEFAULT_SOFTWARE_MANIFEST"
+    echo "makecatalogs"
+    echo
+    echo "--- END OF SAL SETUP INSTRUCTIONS ---"
+    echo
+fi
 echo "--- DETAILS ---"
 echo
 echo "Your Munki URL is: $HTTP_PROTOCOL://$IP:$MUNKI_PORT"
@@ -244,7 +257,9 @@ fi
 if [[ $MUNKI_DO_ENABLED = true ]]; then
     echo "Your Munki-Do URL is: $HTTP_PROTOCOL://$IP:$MUNKI_DO_PORT"
 fi
-echo "Your Sal URL is: $HTTP_PROTOCOL://$IP:$SAL_PORT"
+if [[ $SAL_ENABLED == true ]]; then
+    echo "Your Sal URL is: $HTTP_PROTOCOL://$IP:$SAL_PORT"
+fi
 echo
 echo "Download the Munki Client Installer Pkg on a client from the following URL:"
 echo

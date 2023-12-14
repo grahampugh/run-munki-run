@@ -1,0 +1,17 @@
+version: '1.0'
+services:
+  ingress:
+    image: nginx
+    container_name: munki
+    networks:
+      - gateway
+    ports:
+      - '80:80'
+      - '443:443'
+    restart: unless-stopped
+    volumes:
+      - /Users/Shared/munki-config/conf.d:/etc/nginx/conf.d
+      - /Users/Shared/munki-config/ssl:/etc/nginx/ssl
+      - /Users/Shared/munki-config/nginx.conf:/etc/nginx/nginx.conf
+networks:
+  gateway: {}
